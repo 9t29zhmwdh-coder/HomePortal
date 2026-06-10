@@ -22,7 +22,7 @@ A lightweight, self-hosted personal web portal built with FastAPI and Docker. De
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/9t29zhmwdh-coder/home-portal.git
+git clone https://github.com/9t29zhmwdh-coder/HomePortal.git
 cd home-portal
 
 # 2. Configure environment

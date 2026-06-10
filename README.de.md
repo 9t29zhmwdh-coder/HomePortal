@@ -22,7 +22,7 @@ Ein schlankes, selbst gehostetes persönliches Webportal auf Basis von FastAPI u
 
 ```bash
 # 1. Repo klonen
-git clone https://github.com/9t29zhmwdh-coder/home-portal.git
+git clone https://github.com/9t29zhmwdh-coder/HomePortal.git
 cd home-portal
 
 # 2. Konfiguration anpassen
