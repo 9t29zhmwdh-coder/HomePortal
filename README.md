@@ -6,8 +6,6 @@
 
 > 🇩🇪 [Deutsche Version](README.de.md)
 
-# Home Portal
-
 A lightweight, self-hosted personal web portal built with FastAPI and Docker. Designed to run on a NAS or any Linux server.
 
 ## Tech Stack
