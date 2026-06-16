@@ -18,4 +18,4 @@ jobs:
       - name: Install ruff
         run: pip install ruff
       - name: Lint
-        run: ruff check --select E9,F821-F823 --output-format=github .
+        run: ruff check --select E9,F821,F822,F823 --output-format=github .
