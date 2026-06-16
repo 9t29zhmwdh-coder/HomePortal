@@ -13,6 +13,7 @@ A lightweight, self-hosted personal web portal built with FastAPI and Docker. De
 ![Docker](https://img.shields.io/badge/Docker-Compose-blue?logo=docker)
 ![Platform](https://img.shields.io/badge/Platform-Linux-lightgrey?logo=linux)
 ![License](https://img.shields.io/badge/License-MIT-green)
+[![CI](https://github.com/9t29zhmwdh-coder/HomePortal/actions/workflows/ci.yml/badge.svg)](https://github.com/9t29zhmwdh-coder/HomePortal/actions/workflows/ci.yml)
 
 
 ## Tech Stack
