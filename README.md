@@ -8,9 +8,9 @@
 
 A lightweight, self-hosted personal web portal built with FastAPI and Docker. Designed to run on a NAS or any Linux server.
 
-![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python)
-![FastAPI](https://img.shields.io/badge/FastAPI-latest-009688?logo=fastapi)
-![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)
+![Python](https://img.shields.io/badge/Python-3.12-orange?logo=python)
+![FastAPI](https://img.shields.io/badge/FastAPI-latest-blue?logo=fastapi)
+![Docker](https://img.shields.io/badge/Docker-Compose-blue?logo=docker)
 ![Platform](https://img.shields.io/badge/Platform-Linux-lightgrey?logo=linux)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
