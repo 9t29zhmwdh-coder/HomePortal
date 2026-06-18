@@ -1,7 +1,7 @@
 # Privacy Policy
 
-HomePortal is a self-hosted application. All data — bookmarks, widgets, credentials,
-and configuration — resides exclusively on your own server. Nothing is transmitted
+HomePortal is a self-hosted application. All data : bookmarks, widgets, credentials,
+and configuration : resides exclusively on your own server. Nothing is transmitted
 to external services by the application itself.
 
 - **No telemetry:** HomePortal does not collect usage data or phone home.
