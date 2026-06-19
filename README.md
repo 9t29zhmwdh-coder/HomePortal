@@ -8,10 +8,7 @@
 
 A lightweight, self-hosted personal web portal built with FastAPI and Docker. Designed to run on a NAS or any Linux server.
 
-![Python](https://img.shields.io/badge/Python-3.12-orange?logo=python)
-![FastAPI](https://img.shields.io/badge/FastAPI-latest-blue?logo=fastapi)
-![Docker](https://img.shields.io/badge/Docker-Compose-blue?logo=docker)
-![Platform](https://img.shields.io/badge/Platform-Linux-lightgrey?logo=linux)
+[![CI](https://github.com/9t29zhmwdh-coder/HomePortal/actions/workflows/ci.yml/badge.svg)](https://github.com/9t29zhmwdh-coder/HomePortal/actions) ![Platform](https://img.shields.io/badge/Platform-Linux-lightgrey?logo=linux&logoColor=black) ![Python](https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=white) ![AI | Claude Code](https://img.shields.io/badge/AI-Claude_Code-black?logo=anthropic&logoColor=white) ![AI | Copilot](https://img.shields.io/badge/AI-Copilot-black?logo=github&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green)
 [![CI](https://github.com/9t29zhmwdh-coder/HomePortal/actions/workflows/ci.yml/badge.svg)](https://github.com/9t29zhmwdh-coder/HomePortal/actions/workflows/ci.yml)
 
@@ -90,4 +87,4 @@ docker compose down
 
 ---
 
-**Author:** [Rafael Yilmaz](https://github.com/9t29zhmwdh-coder) &nbsp;·&nbsp; **Status:** Production Ready &nbsp;·&nbsp; **Last Updated:** June 2026
+**Author:** [Rafael Yilmaz](https://github.com/9t29zhmwdh-coder) · **Status:** Active · v0.1.0 · **License:** MIT
