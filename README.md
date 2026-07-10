@@ -30,8 +30,6 @@ A lightweight, self-hosted personal web portal built with FastAPI and Docker. De
 - Docker & Docker Compose
 - NAS or Linux server
 
-> 🌱 New here? → [Step-by-step guide for beginners](GETTING_STARTED.md)
-
 ## Installation
 
 ```bash

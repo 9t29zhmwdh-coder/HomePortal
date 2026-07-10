@@ -12,6 +12,12 @@
 
 Ein schlankes, selbst gehostetes persönliches Webportal auf Basis von FastAPI und Docker. Läuft auf einem NAS oder beliebigem Linux-Server.
 
+---
+
+> 🌱 Neu hier? → [Schritt-für-Schritt-Anleitung für Einsteiger](GETTING_STARTED.md)
+
+---
+
 ## Tech Stack
 
 | Komponente | Technologie |
