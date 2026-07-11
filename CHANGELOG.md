@@ -5,6 +5,16 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-07-11
+
+### Added
+
+- Documented Dual-Licensing assessment (Community-only) in ROADMAP.md.
+
+### Fixed
+
+- Removed em-dashes from ROADMAP.md headings.
+
 ## [0.1.3] - 2026-07-11
 
 ### Fixed
