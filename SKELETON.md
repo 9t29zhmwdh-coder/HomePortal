@@ -1,4 +1,4 @@
-# HomePortal — Professional Repo Skeleton
+# HomePortal: Professional Repo Skeleton
 
 **Generated:** 2026-06-16 | **Earliest commit:** 2026-06-15 | **Release:** v0.1.0
 
@@ -60,4 +60,4 @@ HomePortal/
 ```
 
 ---
-*HomePortal — RayStudio · Rafael Yilmaz · MIT License · 2026*
+*HomePortal: RayStudio · Rafael Yilmaz · MIT License · 2026*

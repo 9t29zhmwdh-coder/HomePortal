@@ -64,9 +64,9 @@ notepad .env
 ```
 
 In Notepad, set at minimum:
-- `APP_SECRET_KEY` — replace `change-me-to-a-random-secret` with any long random string
-- `TZ` — your timezone, e.g. `Europe/Zurich`
-- `DATA_PATH` — where persistent data should be stored; on a plain Windows test setup you can leave the default or point it at a local folder
+- `APP_SECRET_KEY`: replace `change-me-to-a-random-secret` with any long random string
+- `TZ`: your timezone, e.g. `Europe/Zurich`
+- `DATA_PATH`: where persistent data should be stored; on a plain Windows test setup you can leave the default or point it at a local folder
 
 Save and close Notepad.
 
