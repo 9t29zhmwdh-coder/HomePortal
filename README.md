@@ -10,9 +10,19 @@ A lightweight, self-hosted personal web portal built with FastAPI and Docker. De
 
 [![CI](https://github.com/9t29zhmwdh-coder/HomePortal/actions/workflows/ci.yml/badge.svg)](https://github.com/9t29zhmwdh-coder/HomePortal/actions) ![Platform](https://img.shields.io/badge/Platform-Linux-lightgrey?logo=linux&logoColor=black) ![Python](https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=white) ![AI | Claude Code](https://img.shields.io/badge/AI-Claude_Code-black?logo=anthropic&logoColor=white) ![AI | Copilot](https://img.shields.io/badge/AI-Copilot-black?logo=github&logoColor=white)
 
+> **How it runs:** Home Portal is a self-hosted web app, not a desktop tool. It runs continuously as a Docker container (FastAPI behind Nginx) on your NAS or server, and you open it in any browser on your network; there is no separate installer beyond `docker compose up`.
+
+![Home Portal](docs/screenshot.png)
+
+<p align="center"><sub>Screenshot shows demo placeholder content (Quick Links, sample "Family Album" photos), not real data.</sub></p>
+
 ---
 
 > 🌱 New here? → [Step-by-step guide for beginners](GETTING_STARTED.md)
+
+---
+
+**In practice:** you deploy the container once on your NAS or home server, and every device on your network gets a single landing page with quick links to your other self-hosted services (NAS, router, media server, and similar) and a small photo album widget; further widgets and bookmark editing are on the [roadmap](ROADMAP.md).
 
 ---
 
@@ -52,10 +62,11 @@ The portal will be available at `http://YOUR-HOST`.
 ```
 home-portal/
 ├── app/
-│   └── main.py          # FastAPI application entry point
+│   ├── main.py           # FastAPI application entry point
+│   ├── templates/        # Jinja2 templates
+│   └── static/           # Static assets (CSS, images)
 ├── nginx/
-│   └── default.conf     # Nginx reverse proxy config
-├── static/              # Static assets (CSS, JS, images)
+│   └── default.conf      # Nginx reverse proxy config
 ├── Dockerfile
 ├── docker-compose.yml
 ├── requirements.txt
@@ -87,6 +98,16 @@ docker compose up -d --build
 # Stop
 docker compose down
 ```
+
+---
+
+## Uninstall / Cleanup
+
+```bash
+docker compose down
+```
+
+Delete the `DATA_PATH` directory configured in `.env` to remove all persisted data, and delete the cloned repository directory itself. Home Portal has no other host-level state.
 
 ---
 

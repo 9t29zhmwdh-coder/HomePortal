@@ -4,14 +4,17 @@
 - FastAPI backend
 - Nginx reverse proxy config
 - Docker Compose stack
-- Basic portal UI
 
-## v0.2.0, Planned
+## v0.2.0, First Working UI (2026-07-13)
+- Landing page with quick links and a photo album widget (`app/templates/`, `app/static/`)
+- Fixed a startup crash: v0.1.0 referenced a UI that was never actually committed
+
+## v0.3.0, Planned
 - [ ] Bookmark management UI
 - [ ] Widget system (clock, weather, RSS)
 - [ ] User authentication (optional, single-user)
 
-## v0.3.0, Planned
+## v0.4.0, Planned
 - [ ] Theme editor
 - [ ] Mobile-responsive layout
 - [ ] Plugin API
