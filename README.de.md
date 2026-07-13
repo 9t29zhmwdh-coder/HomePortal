@@ -8,13 +8,21 @@
 
 🇬🇧 [English Version](README.md)
 
-# Home Portal
-
 Ein schlankes, selbst gehostetes persönliches Webportal auf Basis von FastAPI und Docker. Läuft auf einem NAS oder beliebigem Linux-Server.
+
+> **So läuft es:** Home Portal ist eine selbst gehostete Web-App, kein Desktop-Tool. Sie läuft dauerhaft als Docker-Container (FastAPI hinter Nginx) auf deinem NAS oder Server, und du öffnest sie über einen beliebigen Browser in deinem Netzwerk; es gibt keinen separaten Installer über `docker compose up` hinaus.
+
+![Home Portal](docs/screenshot.png)
+
+<p align="center"><sub>Der Screenshot zeigt Demo-Platzhalterinhalte (Quick Links, Beispiel-"Familienalbum"-Fotos), keine echten Daten.</sub></p>
 
 ---
 
 > 🌱 Neu hier? → [Schritt-für-Schritt-Anleitung für Einsteiger](GETTING_STARTED.md)
+
+---
+
+**In der Praxis:** du bringst den Container einmal auf deinem NAS oder Heimserver zum Laufen, und jedes Gerät in deinem Netzwerk bekommt eine einzige Startseite mit Schnellzugriffen auf deine anderen selbst gehosteten Dienste (NAS, Router, Medienserver und Ähnliches) sowie ein kleines Fotoalbum-Widget; weitere Widgets und Bookmark-Bearbeitung stehen auf der [Roadmap](ROADMAP.md).
 
 ---
 
@@ -54,10 +62,11 @@ Das Portal ist danach unter `http://DEIN-HOST` erreichbar.
 ```
 home-portal/
 ├── app/
-│   └── main.py          # FastAPI Einstiegspunkt
+│   ├── main.py           # FastAPI Einstiegspunkt
+│   ├── templates/        # Jinja2-Templates
+│   └── static/           # Statische Dateien (CSS, Bilder)
 ├── nginx/
 │   └── default.conf     # Nginx Reverse-Proxy-Konfiguration
-├── static/              # Statische Dateien (CSS, JS, Bilder)
 ├── Dockerfile
 ├── docker-compose.yml
 ├── requirements.txt
@@ -72,7 +81,7 @@ home-portal/
 |----------|-------------|---------|
 | `DATA_PATH` | Pfad für persistente Daten | `/volume1/docker/home-portal` |
 | `TZ` | Zeitzone | `Europe/Zurich` |
-| `APP_SECRET_KEY` | Secret Key für Sessions | `zufaelliger-string` |
+| `APP_SECRET_KEY` | Secret Key für Sessions | `zufälliger-string` |
 
 ## Nützliche Befehle
 
@@ -89,6 +98,14 @@ docker compose up -d --build
 # Stoppen
 docker compose down
 ```
+
+## Deinstallation / Aufräumen
+
+```bash
+docker compose down
+```
+
+Lösche das in `.env` konfigurierte `DATA_PATH`-Verzeichnis, um alle persistierten Daten zu entfernen, sowie das geklonte Repository-Verzeichnis selbst. Home Portal hinterlässt keine weiteren Spuren auf dem Host.
 
 ---
 

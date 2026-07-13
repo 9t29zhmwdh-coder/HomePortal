@@ -5,6 +5,21 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-07-13
+
+### Fixed
+
+- Fixed a startup crash: `app/main.py` referenced a `static/` directory and an `app/templates/index.html` file that did not exist anywhere in the repository, so the app failed with `RuntimeError: Directory 'static' does not exist` on every launch.
+- Made `StaticFiles`/`Jinja2Templates` directory paths resolve relative to `app/main.py`'s own location instead of the process's current working directory.
+- Updated the `TemplateResponse` call for the current Starlette API, which now takes `request` as its first argument.
+
+### Added
+
+- Built the actual landing page: a Quick Links grid and a Family Album widget with demo placeholder photos, plus matching CSS.
+- Added a smoke test suite (`tests/test_smoke.py`) and a `pytest.ini` so CI catches this class of bug in the future.
+- Added a real screenshot (`docs/screenshot.png`) of the running app to both README files.
+- Added "How it runs" / "In practice" / "Uninstall" sections to README.md and README.de.md.
+
 ## [0.1.5] - 2026-07-12
 
 ### Fixed
