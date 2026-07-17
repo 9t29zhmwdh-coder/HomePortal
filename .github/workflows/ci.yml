@@ -26,3 +26,34 @@ jobs:
         run: ruff check --select E9,F821,F822,F823 --output-format=github .
       - name: Smoke test
         run: pytest tests/ -v
+
+  docker-smoke-test:
+    name: Docker Compose Smoke Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+      - name: Prepare environment
+        run: |
+          mkdir -p /tmp/homeportal-data/static /tmp/homeportal-data/data
+          cat > .env <<EOF
+          DATA_PATH=/tmp/homeportal-data
+          TZ=Europe/Zurich
+          APP_SECRET_KEY=ci-smoke-test-secret
+          EOF
+      - name: Build and start stack
+        run: docker compose up -d --build
+      - name: Wait for portal to become reachable
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost/ > /dev/null; then
+              echo "Portal is up"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Portal never came up"
+          docker compose logs
+          exit 1
+      - name: Tear down
+        if: always()
+        run: docker compose down
