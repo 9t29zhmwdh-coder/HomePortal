@@ -19,13 +19,13 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install dependencies
-        run: pip install -r requirements.txt pytest httpx
+        run: pip install -r requirements.txt pytest pytest-cov httpx
       - name: Install ruff
         run: pip install ruff
       - name: Lint
         run: ruff check --select E9,F821,F822,F823 --output-format=github .
       - name: Smoke test
-        run: pytest tests/ -v
+        run: pytest tests/ -v --cov=app --cov-report=term-missing
 
   docker-smoke-test:
     name: Docker Compose Smoke Test
