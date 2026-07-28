@@ -21,9 +21,11 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt pytest pytest-cov httpx
       - name: Install ruff
-        run: pip install ruff
+        run: pip install ruff==0.16.0
       - name: Lint
         run: ruff check --select E9,F821,F822,F823 --output-format=github .
+      - name: Format check
+        run: ruff format --check .
       - name: Smoke test
         run: pytest tests/ -v --cov=app --cov-report=term-missing
 
