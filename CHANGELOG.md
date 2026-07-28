@@ -3,6 +3,16 @@
 All notable changes to HomePortal will be documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.1.0] - 2026-07-28
+
+### Added
+
+- `ruff format --check` in CI, which did not exist. The tree was already formatted, so nothing changed in the source; the check simply keeps it that way from here on.
+
+### Changed
+
+- CI installed ruff with a bare `pip install ruff`, which resolves to whatever the newest release happens to be on the day the job runs. Now pinned to `ruff==0.16.0`. This is the case `engineering-standards` v0.7.0 describes: an unpinned formatter turns CI red on unchanged source as soon as upstream changes what counts as formatted, which is what happened to `AdapterForge` on 2026-07-28.
+
 ## [1.0.1] - 2026-07-20
 
 ### Changed
