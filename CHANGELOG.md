@@ -3,6 +3,14 @@
 All notable changes to HomePortal will be documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.1.4] - 2026-07-29
+
+### Added
+
+- `.github/workflows/release.yml`. Pushing a version tag produced nothing here: the tag landed in the repository and no release was ever created, which is how several versions ended up tagged but unreleased. The gap only showed when the tag list was compared against the release list. Release notes are taken from the matching `CHANGELOG.md` section, so they are not maintained separately from the file.
+
+---
+
 ## [1.1.3] - 2026-07-29
 
 ### Changed
