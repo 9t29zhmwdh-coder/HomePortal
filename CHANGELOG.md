@@ -3,6 +3,16 @@
 All notable changes to HomePortal will be documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.1.3] - 2026-07-29
+
+### Changed
+
+Dependency and workflow updates merged since 1.1.2:
+
+- chore(ci): bump the actions group across 1 directory with 4 updates
+
+---
+
 ## [1.1.2] - 2026-07-28
 
 ### Changed
