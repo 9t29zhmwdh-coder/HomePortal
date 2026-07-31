@@ -10,7 +10,19 @@
 
 [🇬🇧 English Version](README.md)
 
-Ein schlankes, selbst gehostetes persönliches Webportal auf Basis von FastAPI und Docker. Läuft auf einem NAS oder beliebigem Linux-Server.
+**Eine Seite im Heimnetz, die auf alles verlinkt, was du selbst hostest, damit sich niemand die Ports merken muss.**
+
+Das NAS liegt auf `:5000`, Home Assistant auf `:8123`, der Medienserver
+irgendwo anders. Du weisst das. Sonst niemand im Haus, und nach zwei Wochen
+Ferien du auch nicht mehr.
+
+Home Portal ist eine Startseite mit genau diesen Links darauf, dazu ein kleines
+Fotoalbum, als Docker-Container auf dem NAS oder Server, den du ohnehin
+betreibst.
+
+**Nichts für dich, wenn** du ein Dashboard mit Live-Status, Sensorwerten oder
+Service-Health willst. Da sind Homer, Heimdall und Dashy weiter. Das hier ist
+bewusst eine Linkseite, keine Überwachungsoberfläche.
 
 > **So läuft es:** Home Portal ist eine selbst gehostete Web-App, kein Desktop-Tool. Sie läuft dauerhaft als Docker-Container (FastAPI hinter Nginx) auf deinem NAS oder Server, und du öffnest sie über einen beliebigen Browser in deinem Netzwerk; es gibt keinen separaten Installer über `docker compose up` hinaus.
 
