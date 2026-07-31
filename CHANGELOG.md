@@ -3,6 +3,14 @@
 All notable changes to HomePortal will be documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.1.6] - 2026-07-31
+
+### Changed
+
+- Both READMEs now open with the situation the portal solves, which is that everyone else in the house has no idea which port a service is on, rather than describing the stack it is built from. A short paragraph says that anyone wanting live status or service health is better served by Homer, Heimdall or Dashy, because this is deliberately a page of links.
+
+---
+
 ## [1.1.5] - 2026-07-29
 
 ### Security

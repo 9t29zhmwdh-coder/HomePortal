@@ -6,7 +6,18 @@
 
 [🇩🇪 Deutsche Version](README.de.md)
 
-A lightweight, self-hosted personal web portal built with FastAPI and Docker. Designed to run on a NAS or any Linux server.
+**One page on your network that links to everything you self-host, so nobody has to remember which port it was on.**
+
+Your NAS is on `:5000`, Home Assistant on `:8123`, the media server somewhere
+else. You know them. Nobody else in the house does, and neither will you after
+a holiday.
+
+Home Portal is one landing page with those links on it, plus a small photo
+album, running as a Docker container on the NAS or server you already have.
+
+**Not for you if** you want a dashboard with live status, sensor values or
+service health. Homer, Heimdall and Dashy are further along there. This is
+deliberately a page of links, not a monitoring surface.
 
 [![CI](https://github.com/9t29zhmwdh-coder/HomePortal/actions/workflows/ci.yml/badge.svg)](https://github.com/9t29zhmwdh-coder/HomePortal/actions) [![CodeQL](https://github.com/9t29zhmwdh-coder/HomePortal/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/9t29zhmwdh-coder/HomePortal/security/code-scanning) [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/9t29zhmwdh-coder/HomePortal/badge)](https://securityscorecards.dev/viewer/?uri=github.com/9t29zhmwdh-coder/HomePortal) [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13705/badge)](https://www.bestpractices.dev/projects/13705)
 
