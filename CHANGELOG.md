@@ -3,6 +3,14 @@
 All notable changes to HomePortal will be documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.1.8] - 2026-08-04
+
+### Changed
+
+- `uvicorn[standard]` minimum raised from 0.29.0 to 0.52.0 and `python-multipart` from 0.0.9 to 0.0.32. Both are lower bounds in the requirements, so the installed versions were already newer; what changes is that an old one can no longer be resolved.
+
+---
+
 ## [1.1.7] - 2026-07-31
 
 ### Fixed
