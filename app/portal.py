@@ -95,25 +95,30 @@ def is_safe_url(url: str) -> bool:
     return parsed.scheme.lower() in ALLOWED_SCHEMES and bool(parsed.netloc)
 
 
-def list_photos(data_dir: Path = DATA_DIR) -> list[str]:
+def photo_files(data_dir: Path = DATA_DIR) -> list[Path]:
     photos_dir = data_dir / PHOTOS_NAME
     if not photos_dir.is_dir():
         return []
-    names = sorted(
-        entry.name
-        for entry in photos_dir.iterdir()
-        if entry.is_file()
-        and entry.suffix.lower() in PHOTO_SUFFIXES
-        and not entry.name.startswith(".")
+    files = sorted(
+        (
+            entry
+            for entry in photos_dir.iterdir()
+            if entry.is_file()
+            and entry.suffix.lower() in PHOTO_SUFFIXES
+            and not entry.name.startswith(".")
+        ),
+        key=lambda entry: entry.name,
     )
-    return names[:MAX_PHOTOS]
+    return files[:MAX_PHOTOS]
+
+
+def list_photos(data_dir: Path = DATA_DIR) -> list[str]:
+    return [entry.name for entry in photo_files(data_dir)]
 
 
 def resolve_photo(name: str, data_dir: Path = DATA_DIR) -> Path | None:
-    """Only names that list_photos would show are served, which rules out ../ and hidden files."""
-    if name not in list_photos(data_dir):
-        return None
-    return data_dir / PHOTOS_NAME / name
+    """Returns the listed file itself, so the request never builds a path: ../ and hidden files cannot match."""
+    return next((entry for entry in photo_files(data_dir) if entry.name == name), None)
 
 
 def caption_for(name: str) -> str:
