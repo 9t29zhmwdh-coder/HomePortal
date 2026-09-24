@@ -1,0 +1,33 @@
+{% macro tile_body(tile, photos, t, preview=false) -%}
+{%- set c = tile.config -%}
+{%- if tile.type == 'link' -%}
+  {% if preview %}<div class="tile-inner link-card">{% else %}<a class="tile-inner link-card" href="{{ c.url }}">{% endif %}
+    {% if c.icon %}<span class="icon">{{ c.icon }}</span>{% endif %}
+    <span class="name">{{ c.name }}</span>
+    {% if c.description %}<span class="desc">{{ c.description }}</span>{% endif %}
+  {% if preview %}</div>{% else %}</a>{% endif %}
+{%- elif tile.type == 'note' -%}
+  <div class="tile-inner note-card">
+    {% if c.title %}<h3>{{ c.title }}</h3>{% endif %}
+    <p>{{ c.text | e | replace('\n', '<br>' | safe) }}</p>
+  </div>
+{%- elif tile.type == 'album' -%}
+  <div class="tile-inner album-card">
+    {% if c.title %}<h3>{{ c.title }}</h3>{% endif %}
+    {% if photos %}
+    <div class="album-mosaic">
+      {% for name in photos[:24] %}
+      {% if preview %}<img src="/photos/{{ name | urlencode }}" alt="" loading="lazy">
+      {% else %}<a href="/photos/{{ name | urlencode }}" target="_blank" rel="noopener"><img src="/photos/{{ name | urlencode }}" alt="{{ caption_for(name) }}" title="{{ caption_for(name) }}" loading="lazy"></a>{% endif %}
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="dim">{{ t('album_empty') }}</p>
+    {% endif %}
+  </div>
+{%- endif -%}
+{%- endmacro %}
+
+{% macro placement(tile) -%}
+--x: {{ tile.x + 1 }}; --y: {{ tile.y + 1 }}; --w: {{ tile.w }}; --h: {{ tile.h }}; --mw: {{ [tile.w, 2] | min }};
+{%- endmacro %}

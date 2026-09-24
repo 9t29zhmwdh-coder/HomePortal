@@ -1,7 +1,6 @@
 import io
 import json
 
-import pytest
 from fastapi.testclient import TestClient
 from PIL import Image
 
@@ -99,45 +98,32 @@ def test_unknown_values_fall_back(admin, data_dir):
     assert look["background"] == {"kind": "none", "value": ""}
 
 
-def test_links_can_be_added_edited_moved_and_deleted(admin, data_dir):
-    for name in ("One", "Two"):
-        admin.post(
-            "/settings/links",
-            data={
-                "csrf": admin.csrf,
-                "name": name,
-                "url": f"http://{name.lower()}.lan",
-            },
-        )
-    first, second = state(data_dir)["links"]
-    admin.post(
-        f"/settings/links/{second['id']}", data={"csrf": admin.csrf, "action": "up"}
+def test_tabs_can_be_added_renamed_moved_and_deleted_with_confirmation(admin, data_dir):
+    admin.get("/")
+    admin.post("/settings/dashboards", data={"csrf": admin.csrf, "name": "Medien"})
+    first, second = state(data_dir)["dashboards"]
+    form = {"csrf": admin.csrf, "action": "up"}
+    admin.post(f"/settings/dashboards/{second['id']}", data=form)
+    assert [b["name"] for b in state(data_dir)["dashboards"]] == ["Medien", ""]
+    rename = {"csrf": admin.csrf, "action": "rename", "name": "Zuhause"}
+    admin.post(f"/settings/dashboards/{first['id']}", data=rename)
+    unconfirmed = admin.post(
+        f"/settings/dashboards/{second['id']}",
+        data={"csrf": admin.csrf, "action": "delete"},
     )
-    assert [link["name"] for link in state(data_dir)["links"]] == ["Two", "One"]
-    edit = {
-        "csrf": admin.csrf,
-        "action": "save",
-        "name": "Eins",
-        "url": "https://eins.lan",
-        "icon": "🏠",
-    }
-    admin.post(f"/settings/links/{first['id']}", data=edit)
-    assert state(data_dir)["links"][1]["name"] == "Eins"
-    admin.post(
-        f"/settings/links/{second['id']}", data={"csrf": admin.csrf, "action": "delete"}
-    )
-    assert [link["name"] for link in state(data_dir)["links"]] == ["Eins"]
+    assert "confirm_tab" in unconfirmed.headers["location"]
+    assert len(state(data_dir)["dashboards"]) == 2
+    confirmed = {"csrf": admin.csrf, "action": "delete", "confirm": "yes"}
+    admin.post(f"/settings/dashboards/{second['id']}", data=confirmed)
+    assert [b["name"] for b in state(data_dir)["dashboards"]] == ["Zuhause"]
 
 
-@pytest.mark.parametrize(
-    "url", ["javascript:alert(1)", "data:text/html,x", "ftp://x", "keine url"]
-)
-def test_unsafe_link_urls_are_refused(admin, data_dir, url):
-    response = admin.post(
-        "/settings/links", data={"csrf": admin.csrf, "name": "Bad", "url": url}
-    )
-    assert "invalid_link" in response.headers["location"]
-    assert state(data_dir)["links"] == []
+def test_last_tab_cannot_be_deleted(admin, data_dir):
+    admin.get("/")
+    only = state(data_dir)["dashboards"][0]
+    confirmed = {"csrf": admin.csrf, "action": "delete", "confirm": "yes"}
+    admin.post(f"/settings/dashboards/{only['id']}", data=confirmed)
+    assert len(state(data_dir)["dashboards"]) == 1
 
 
 def test_html_in_texts_is_escaped(admin):

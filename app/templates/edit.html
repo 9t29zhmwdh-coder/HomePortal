@@ -1,0 +1,68 @@
+{% extends "_base.html" %}
+{% from "_tiles.html" import tile_body %}
+{% set edit_mode = true %}
+{% block title %}{{ t('edit_tab') }} · {{ state.site.title }}{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="/static/vendor/gridstack/gridstack.min.css">
+{% endblock %}
+{% block body %}
+<header class="page-head">
+  <div>
+    <h1>{{ t('edit_tab') }}: {{ board.name or t('home_tab') }}</h1>
+    <p>{{ t('edit_intro') }}</p>
+  </div>
+</header>
+
+{% include "_tabs.html" %}
+
+<div class="edit-bar panel">
+  <form class="add-tile" method="get" action="/edit/{{ board.id }}/tiles/new">
+    <label>{{ t('add_tile') }}
+      <select name="type">
+        {% for key in catalog_tiles.TYPES %}<option value="{{ key }}">{{ t('tile_' ~ key) }}</option>{% endfor %}
+      </select>
+    </label>
+    <button type="submit" class="ghost">+ {{ t('add') }}</button>
+  </form>
+  <span class="edit-status" id="edit-status" role="status"></span>
+  <span class="edit-actions">
+    <button type="button" id="save-layout">{{ t('save_layout') }}</button>
+    <a class="button ghost" href="{{ '/' if board.id == state.dashboards[0].id else '/d/' ~ board.id }}">{{ t('done') }}</a>
+  </span>
+</div>
+
+{% if err %}<p class="notice notice-warn">{{ t(err) }}</p>{% endif %}
+
+<div class="grid-stack" id="grid"
+     data-save-url="/edit/{{ board.id }}/layout"
+     data-csrf="{{ csrf }}"
+     data-columns="{{ catalog_tiles.COLUMNS }}"
+     data-msg-saved="{{ t('layout_saved') }}"
+     data-msg-failed="{{ t('layout_failed') }}"
+     data-msg-unsaved="{{ t('layout_unsaved') }}">
+  {% for tile in board.tiles %}
+  <div class="grid-stack-item" gs-id="{{ tile.id }}" gs-x="{{ tile.x }}" gs-y="{{ tile.y }}" gs-w="{{ tile.w }}" gs-h="{{ tile.h }}" gs-no-resize="true">
+    <div class="grid-stack-item-content tile tile-{{ tile.type }}">
+      <div class="tile-toolbar">
+        <span class="drag-handle" title="{{ t('drag') }}" aria-hidden="true">⠿</span>
+        <select class="size-select" aria-label="{{ t('size') }}">
+          {% for size in catalog_tiles.TYPES[tile.type].sizes %}
+          {% set wh = catalog_tiles.SIZES[size] %}
+          <option value="{{ wh[0] }}x{{ wh[1] }}" {% if wh[0] == tile.w and wh[1] == tile.h %}selected{% endif %}>{{ wh[0] }}×{{ wh[1] }} {{ t('size_' ~ size) }}</option>
+          {% endfor %}
+        </select>
+        <a class="tool" href="/edit/{{ board.id }}/tiles/{{ tile.id }}" title="{{ t('edit') }}">✎</a>
+        <form method="post" action="/edit/{{ board.id }}/tiles/{{ tile.id }}/delete" class="inline-form">
+          <input type="hidden" name="csrf" value="{{ csrf }}">
+          <button class="tool danger" type="submit" title="{{ t('delete') }}">✕</button>
+        </form>
+      </div>
+      {{ tile_body(tile, photos, t, preview=true) }}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<script src="/static/vendor/gridstack/gridstack-all.js"></script>
+<script src="/static/js/editor.js"></script>
+{% endblock %}

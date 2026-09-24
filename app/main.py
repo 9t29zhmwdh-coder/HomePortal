@@ -2,13 +2,14 @@ from fastapi import FastAPI, Form, HTTPException, Request
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from app import auth, settings, uploads, web
+from app import auth, editor, settings, store, uploads, web
 from app import portal as portal_data
 
-app = FastAPI(title="Home Portal", version="1.3.0")
+app = FastAPI(title="Home Portal", version="1.4.0")
 
 app.mount("/static", StaticFiles(directory=str(web.BASE_DIR / "static")), name="static")
 app.include_router(settings.router)
+app.include_router(editor.router)
 
 
 @app.exception_handler(web.LoginRequired)
@@ -19,10 +20,22 @@ async def to_login(request: Request, _exc: web.LoginRequired):
 
 @app.get("/")
 async def index(request: Request):
+    return show_dashboard(request, None)
+
+
+@app.get("/d/{dashboard_id}")
+async def dashboard(request: Request, dashboard_id: str):
+    return show_dashboard(request, dashboard_id)
+
+
+def show_dashboard(request: Request, dashboard_id: str | None):
     state = web.load_state()
     guard_viewing(request, state)
+    board = store.find_dashboard(state, dashboard_id)
+    if board is None:
+        raise HTTPException(status_code=404)
     photos = portal_data.list_photos(web.data_dir())
-    return web.render(request, "index.html", state, photos=photos)
+    return web.render(request, "index.html", state, board=board, photos=photos)
 
 
 def guard_viewing(request: Request, state: dict) -> None:

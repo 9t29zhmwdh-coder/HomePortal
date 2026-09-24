@@ -77,6 +77,17 @@ jobs:
           curl -sf -b "$jar" -o /dev/null -d "csrf=$csrf&theme=glass&font=nunito&language=de&background=photo:aurora" http://localhost/settings/appearance
           curl -sf http://localhost/ | grep -q 'theme-glass bg-image'
           curl -sf -o /dev/null http://localhost/static/backgrounds/aurora.jpg
+      - name: Save a tile layout through Nginx
+        run: |
+          set -e
+          jar=$(mktemp)
+          curl -sf -c "$jar" -o /dev/null -d "password=ci-smoke-password-123" http://localhost/login
+          csrf=$(curl -sf -b "$jar" http://localhost/settings | grep -o 'name="csrf" value="[^"]*"' | head -1 | cut -d'"' -f4)
+          board=$(sudo python3 -c "import json;print(json.load(open('/tmp/homeportal-data/portal.json'))['dashboards'][0]['id'])")
+          layout=$(sudo python3 -c "import json;t=json.load(open('/tmp/homeportal-data/portal.json'))['dashboards'][0]['tiles'];print(json.dumps([{'id':x['id'],'x':5-i if x['w']==1 else 0,'y':0 if x['w']==1 else 1,'w':x['w'],'h':x['h']} for i,x in enumerate(t)]))")
+          test "$(curl -s -b "$jar" -o /dev/null -w '%{http_code}' -H 'Content-Type: application/json' -d "$layout" http://localhost/edit/$board/layout)" = 403
+          curl -sf -b "$jar" -H 'Content-Type: application/json' -H "X-CSRF-Token: $csrf" -d "$layout" http://localhost/edit/$board/layout | grep -q '"ok":true'
+          curl -sf http://localhost/ | grep -q -- '--x: 6'
       - name: Data folder holds only what the app wrote
         run: |
           ls -la /tmp/homeportal-data

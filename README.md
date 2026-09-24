@@ -14,12 +14,12 @@ a holiday.
 
 Home Portal is one landing page with those links on it, plus a small photo
 album, running as a Docker container on the NAS or server you already have.
-You set it up in the browser: links, a theme, a background photo or your own
-picture, a font, English or German.
+You set it up in the browser: tabs, tiles you drag into place in fixed sizes,
+a theme, a background photo or your own picture, a font, English or German.
 
 **Not for you if** you need live status, sensor values or service health
 today. Homer, Heimdall and Dashy show those; Home Portal does not yet, it is
-still a page of links.
+still a page of links and notes.
 
 [![CI](https://github.com/9t29zhmwdh-coder/HomePortal/actions/workflows/ci.yml/badge.svg)](https://github.com/9t29zhmwdh-coder/HomePortal/actions) [![CodeQL](https://github.com/9t29zhmwdh-coder/HomePortal/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/9t29zhmwdh-coder/HomePortal/security/code-scanning) [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/9t29zhmwdh-coder/HomePortal/badge)](https://securityscorecards.dev/viewer/?uri=github.com/9t29zhmwdh-coder/HomePortal) [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13705/badge)](https://www.bestpractices.dev/projects/13705)
 
@@ -37,7 +37,7 @@ still a page of links.
 
 ---
 
-**In practice:** you deploy the container once on your NAS or home server, and every device on your network gets a single landing page with quick links to your other self-hosted services (NAS, router, media server, and similar) and a small photo album. On first start you set an admin password; after that the gear icon opens the settings, where you add links and pick how the page looks. Viewing stays open on your network unless you require the password for that too.
+**In practice:** you deploy the container once on your NAS or home server, and every device on your network gets a single landing page with quick links to your other self-hosted services (NAS, router, media server, and similar) and a small photo album. On first start you set an admin password; after that the gear icon opens the settings, where you pick how the page looks and add tabs; the pencil icon on a tab lets you place tiles. Viewing stays open on your network unless you require the password for that too.
 
 ---
 
@@ -78,8 +78,10 @@ The portal will be available at `http://YOUR-HOST`.
 HomePortal/
 ├── app/
 │   ├── main.py           # page, photos, login and setup routes
-│   ├── settings.py       # every route that changes the portal
-│   ├── store.py          # portal.json, imports an old portal.yaml once
+│   ├── settings.py       # appearance, texts, tabs, uploads, access
+│   ├── editor.py         # edit mode: tile layout, add, change, remove tiles
+│   ├── tiles.py          # tile types, fixed sizes, layout checks
+│   ├── store.py          # portal.json, migrates 1.2 and 1.3 data once
 │   ├── auth.py           # admin password (Argon2) and sessions
 │   ├── uploads.py        # background uploads, re-encoded without metadata
 │   ├── catalog.py        # themes, fonts, patterns and photos to choose from
@@ -117,9 +119,23 @@ portal, so do this right after `docker compose up`.
 | Section | What you can change |
 |---|---|
 | Appearance | Theme (Midnight, Glass, Sunrise, Playful, Paper), background (none, four drawn patterns, seven bundled photos, or your own upload), font (Inter, Nunito, Fredoka, Playfair Display, JetBrains Mono), language (browser, English, German) |
-| Page texts | Title, subtitle, both headings |
-| Links | Add, edit, reorder, delete; name and an `http://` or `https://` address are required, description and emoji icon are optional |
+| Page texts | Title and subtitle |
+| Tabs | Add, rename, reorder, delete (with confirmation); each tab is its own page of tiles |
 | Access | Require the password to view the page too; change the password |
+
+**Tiles.** On a tab, the pencil icon opens the edit mode. Drag a tile by its
+⠿ handle, pick its size from the list, and save the layout. Tiles come in fixed
+sizes on a six-column grid, so the page stays tidy wherever they end up:
+
+| Tile | Sizes (columns × rows) |
+|---|---|
+| Link | 1×1, 2×1, 1×2, 2×2; name and an `http://` or `https://` address required, description and emoji optional |
+| Note | 1×1, 2×1, 1×2, 2×2, 4×1, 6×1; title and up to 2000 characters of plain text |
+| Photo album | 2×2, 4×2, 6×2, 6×3; shows the pictures from the `photos` folder |
+
+On a phone the grid folds into two columns and fills gaps on its own.
+
+![Edit mode](docs/edit.jpg)
 
 **Album.** Photos come from the `photos` folder in `DATA_PATH`
 (`.jpg`, `.png`, `.webp`, `.gif`, up to 60, sorted by name, file name becomes
@@ -129,15 +145,17 @@ upload in the browser.
 **Uploaded backgrounds** are decoded and saved again as JPEG, which removes
 location and camera data. JPEG, PNG, WebP and iPhone HEIC up to 20 MB.
 
-**Coming from 1.2?** An existing `portal.yaml` is imported once on first start
-into `portal.json`. After that the settings page is the place to edit; the
-YAML file is no longer read.
+**Coming from 1.2 or 1.3?** An existing `portal.yaml` (1.2) or link list (1.3)
+becomes the first tab on first start: each link a 1×1 tile, the album a 6×2
+tile below them. After that, everything is edited in the browser.
 
 Everything is bundled in the container: fonts, patterns and photos load from
 your server, not from the internet. Photo credits and licences (all CC0) are in
 [`app/static/backgrounds/CREDITS.md`](app/static/backgrounds/CREDITS.md), font
 licences (SIL OFL) in
 [`app/static/fonts/LICENSE-FONTS.txt`](app/static/fonts/LICENSE-FONTS.txt).
+The edit mode uses [gridstack.js](https://gridstackjs.com) (MIT), bundled in
+`app/static/vendor/gridstack`; the page itself needs no JavaScript.
 
 ## Useful Commands
 
@@ -163,7 +181,7 @@ docker compose down
 docker compose down
 ```
 
-Then delete the cloned repository directory. In `DATA_PATH`, Home Portal wrote `portal.json` (settings and links), `auth.json` (password hash) and `uploads/`; your `photos/` folder is yours and was only read. Delete what you no longer need. Home Portal has no other host-level state.
+Then delete the cloned repository directory. In `DATA_PATH`, Home Portal wrote `portal.json` (settings, tabs and tiles), `auth.json` (password hash) and `uploads/`; your `photos/` folder is yours and was only read. Delete what you no longer need. Home Portal has no other host-level state.
 
 ---
 

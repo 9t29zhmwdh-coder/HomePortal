@@ -6,8 +6,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}{{ state.site.title }}{% endblock %}</title>
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/static/css/fonts.css">
   <link rel="stylesheet" href="/static/css/style.css">
+  {% block head %}{% endblock %}
   <style>:root { --font: {{ catalog.FONTS[look.font].family | safe }}, system-ui, sans-serif; }</style>
 </head>
 <body class="theme-{{ look.theme }}{% if bg.kind == 'pattern' %} bg-pattern bg-{{ bg.value }}{% endif %}{% if bg.kind in ('photo', 'upload') %} bg-image{% endif %}"

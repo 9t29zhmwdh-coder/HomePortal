@@ -3,6 +3,28 @@
 All notable changes to HomePortal will be documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.4.0] - 2026-09-24
+
+### Added
+
+- Tabs: several pages of tiles, the first one at the portal address, the others under `/d/<id>`. Added, renamed, reordered and deleted in the settings; deleting asks first and names how many tiles go with it.
+- Edit mode behind the pencil icon: drag tiles by their handle on a six-column grid, pick a size from a fixed list per type, add, change and remove tiles, save the layout. Built on gridstack.js 14 (MIT), bundled and loaded only on the edit page; the portal page itself stays plain HTML and CSS.
+- Tile types: link (1x1, 2x1, 1x2, 2x2), note with title and plain text (up to 6x1), photo album showing the `photos` folder (2x2 up to 6x3).
+- On phones the grid folds into two columns and fills gaps.
+- Favicon.
+
+### Changed
+
+- `portal.json` moves to schema 2. The link list of 1.3 and a 1.2 `portal.yaml` become the first tab on first start: links as 1x1 tiles in their old order, the album as a 6x2 tile below, keeping its heading as the tile title.
+- The settings no longer list links; links are tiles now and are edited on the page. The separate headings above links and album are gone, a tile carries its own title.
+
+### Security
+
+- The server checks every saved layout: each tile exactly once, only sizes allowed for its type, inside the grid, no two tiles on one cell. The layout request needs the session and the CSRF token in a header.
+- Note text is shown as plain text; HTML in it is escaped.
+
+---
+
 ## [1.3.0] - 2026-09-24
 
 ### Added

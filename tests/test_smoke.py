@@ -9,18 +9,19 @@ def test_fresh_install_shows_hint_and_no_fake_links(client):
     response = client.get("/")
     assert response.status_code == 200
     assert 'href="#"' not in response.text
-    assert "No links yet" in response.text
+    assert "This tab is empty." in response.text
 
 
-def test_links_from_legacy_yaml_are_imported_once(client, example_data):
+def test_legacy_yaml_becomes_tiles_once(client, example_data):
     text = client.get("/").text
     assert 'href="http://192.168.1.10:5000"' in text
     first = json.loads((example_data / "portal.json").read_text())
     client.get("/")
     second = json.loads((example_data / "portal.json").read_text())
-    assert [link["id"] for link in first["links"]] == [
-        link["id"] for link in second["links"]
-    ]
+    ids = [tile["id"] for tile in first["dashboards"][0]["tiles"]]
+    assert ids == [tile["id"] for tile in second["dashboards"][0]["tiles"]]
+    types = [tile["type"] for tile in first["dashboards"][0]["tiles"]]
+    assert types == ["link"] * 4 + ["album"]
 
 
 def test_page_follows_the_browser_language(client, example_data):

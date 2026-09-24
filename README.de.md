@@ -18,12 +18,13 @@ Ferien du auch nicht mehr.
 
 Home Portal ist eine Startseite mit genau diesen Links darauf, dazu ein kleines
 Fotoalbum, als Docker-Container auf dem NAS oder Server, den du ohnehin
-betreibst. Eingerichtet wird im Browser: Links, ein Theme, ein Hintergrundfoto
-oder ein eigenes Bild, eine Schrift, Deutsch oder Englisch.
+betreibst. Eingerichtet wird im Browser: Reiter, Kacheln in festen Grössen, die du per
+Ziehen platzierst, ein Theme, ein Hintergrundfoto oder ein eigenes Bild, eine
+Schrift, Deutsch oder Englisch.
 
 **Nichts für dich, wenn** du heute schon Live-Status, Sensorwerte oder
 Service-Health brauchst. Das zeigen Homer, Heimdall und Dashy; Home Portal
-noch nicht, es ist weiterhin eine Linkseite.
+noch nicht, es ist weiterhin eine Seite mit Links und Notizen.
 
 > **So läuft es:** Home Portal ist eine selbst gehostete Web-App, kein Desktop-Tool. Sie läuft dauerhaft als Docker-Container (FastAPI hinter Nginx) auf deinem NAS oder Server, und du öffnest sie über einen beliebigen Browser in deinem Netzwerk; es gibt keinen separaten Installer über `docker compose up` hinaus.
 
@@ -37,7 +38,7 @@ noch nicht, es ist weiterhin eine Linkseite.
 
 ---
 
-**In der Praxis:** du bringst den Container einmal auf deinem NAS oder Heimserver zum Laufen, und jedes Gerät in deinem Netzwerk bekommt eine einzige Startseite mit Schnellzugriffen auf deine anderen selbst gehosteten Dienste (NAS, Router, Medienserver und Ähnliches) sowie ein kleines Fotoalbum. Beim ersten Start legst du ein Admin-Passwort fest; danach öffnet das Zahnrad die Einstellungen, wo du Links einträgst und das Aussehen wählst. Ansehen bleibt in deinem Netz offen, ausser du verlangst auch dafür das Passwort.
+**In der Praxis:** du bringst den Container einmal auf deinem NAS oder Heimserver zum Laufen, und jedes Gerät in deinem Netzwerk bekommt eine einzige Startseite mit Schnellzugriffen auf deine anderen selbst gehosteten Dienste (NAS, Router, Medienserver und Ähnliches) sowie ein kleines Fotoalbum. Beim ersten Start legst du ein Admin-Passwort fest; danach öffnet das Zahnrad die Einstellungen, wo du das Aussehen wählst und Reiter anlegst; der Stift auf einem Reiter lässt dich Kacheln platzieren. Ansehen bleibt in deinem Netz offen, ausser du verlangst auch dafür das Passwort.
 
 ---
 
@@ -78,8 +79,10 @@ Das Portal ist danach unter `http://DEIN-HOST` erreichbar.
 HomePortal/
 ├── app/
 │   ├── main.py           # Seite, Fotos, Login und Einrichtung
-│   ├── settings.py       # alle Routen, die das Portal ändern
-│   ├── store.py          # portal.json, übernimmt eine alte portal.yaml einmalig
+│   ├── settings.py       # Aussehen, Texte, Reiter, Uploads, Zugriff
+│   ├── editor.py         # Bearbeiten-Modus: Layout, Kacheln anlegen, ändern, löschen
+│   ├── tiles.py          # Kacheltypen, feste Grössen, Layout-Prüfung
+│   ├── store.py          # portal.json, übernimmt Daten aus 1.2 und 1.3 einmalig
 │   ├── auth.py           # Admin-Passwort (Argon2) und Sitzungen
 │   ├── uploads.py        # Hintergrund-Uploads, ohne Metadaten neu gespeichert
 │   ├── catalog.py        # Themes, Schriften, Muster und Fotos zur Auswahl
@@ -117,9 +120,25 @@ besitzt das Portal, also gleich nach `docker compose up` erledigen.
 | Bereich | Was sich ändern lässt |
 |---|---|
 | Aussehen | Theme (Mitternacht, Glas, Morgenrot, Verspielt, Papier), Hintergrund (keiner, vier gezeichnete Muster, sieben mitgelieferte Fotos oder ein eigenes Bild), Schrift (Inter, Nunito, Fredoka, Playfair Display, JetBrains Mono), Sprache (wie der Browser, Englisch, Deutsch) |
-| Texte der Seite | Titel, Untertitel, beide Überschriften |
-| Links | Hinzufügen, bearbeiten, umsortieren, löschen; Name und eine Adresse mit `http://` oder `https://` sind Pflicht, Beschreibung und Emoji-Symbol freiwillig |
+| Texte der Seite | Titel und Untertitel |
+| Reiter | Hinzufügen, umbenennen, umsortieren, löschen (mit Rückfrage); jeder Reiter ist eine eigene Seite mit Kacheln |
 | Zugriff | Passwort auch zum Ansehen verlangen; Passwort ändern |
+
+**Kacheln.** Auf einem Reiter öffnet der Stift den Bearbeiten-Modus. Kachel
+am Griff ⠿ ziehen, Grösse in der Liste wählen, Layout speichern. Kacheln gibt
+es in festen Grössen auf einem Raster mit sechs Spalten, so bleibt die Seite
+aufgeräumt, egal wo sie landen:
+
+| Kachel | Grössen (Spalten × Reihen) |
+|---|---|
+| Link | 1×1, 2×1, 1×2, 2×2; Name und Adresse mit `http://` oder `https://` Pflicht, Beschreibung und Emoji freiwillig |
+| Notiz | 1×1, 2×1, 1×2, 2×2, 4×1, 6×1; Titel und bis 2000 Zeichen reiner Text |
+| Fotoalbum | 2×2, 4×2, 6×2, 6×3; zeigt die Bilder aus dem Ordner `photos` |
+
+Auf dem Handy klappt das Raster auf zwei Spalten zusammen und füllt Lücken
+selbst.
+
+![Bearbeiten-Modus](docs/edit.de.jpg)
 
 **Album.** Die Fotos kommen aus dem Ordner `photos` in `DATA_PATH`
 (`.jpg`, `.png`, `.webp`, `.gif`, bis zu 60, nach Dateiname sortiert, der
@@ -130,15 +149,19 @@ des NAS; einen Foto-Upload im Browser gibt es nicht.
 dabei fallen Standort- und Kameradaten weg. JPEG, PNG, WebP und iPhone-HEIC
 bis 20 MB.
 
-**Von 1.2 umsteigen?** Eine vorhandene `portal.yaml` wird beim ersten Start
-einmalig in `portal.json` übernommen. Danach wird in den Einstellungen
-bearbeitet; die YAML-Datei wird nicht mehr gelesen.
+**Von 1.2 oder 1.3 umsteigen?** Eine vorhandene `portal.yaml` (1.2) oder
+Linkliste (1.3) wird beim ersten Start zum ersten Reiter: jeder Link eine
+1×1-Kachel, das Album eine 6×2-Kachel darunter. Danach wird alles im Browser
+bearbeitet.
 
 Alles steckt im Container: Schriften, Muster und Fotos kommen von deinem
 Server, nicht aus dem Internet. Bildnachweise und Lizenzen (alle CC0) stehen in
 [`app/static/backgrounds/CREDITS.md`](app/static/backgrounds/CREDITS.md), die
 Schriftlizenzen (SIL OFL) in
 [`app/static/fonts/LICENSE-FONTS.txt`](app/static/fonts/LICENSE-FONTS.txt).
+Der Bearbeiten-Modus nutzt [gridstack.js](https://gridstackjs.com) (MIT),
+mitgeliefert in `app/static/vendor/gridstack`; die Seite selbst braucht kein
+JavaScript.
 
 ## Nützliche Befehle
 
@@ -162,7 +185,7 @@ docker compose down
 docker compose down
 ```
 
-Danach das geklonte Repository-Verzeichnis löschen. In `DATA_PATH` hat Home Portal `portal.json` (Einstellungen und Links), `auth.json` (Passwort-Hash) und `uploads/` angelegt; dein Ordner `photos/` gehört dir und wurde nur gelesen. Lösche, was du nicht mehr brauchst. Home Portal hinterlässt keine weiteren Spuren auf dem Host.
+Danach das geklonte Repository-Verzeichnis löschen. In `DATA_PATH` hat Home Portal `portal.json` (Einstellungen, Reiter und Kacheln), `auth.json` (Passwort-Hash) und `uploads/` angelegt; dein Ordner `photos/` gehört dir und wurde nur gelesen. Lösche, was du nicht mehr brauchst. Home Portal hinterlässt keine weiteren Spuren auf dem Host.
 
 ---
 

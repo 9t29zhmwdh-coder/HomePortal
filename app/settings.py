@@ -2,16 +2,18 @@
 
 from fastapi import APIRouter, Depends, Request, UploadFile
 
-from app import auth, catalog, store, uploads, web
-from app import portal as portal_data
+from app import auth, catalog, store, tiles, uploads, web
 
 router = APIRouter(prefix="/settings")
-TEXT_FIELDS = ("title", "subtitle", "links_heading", "album_heading")
+TEXT_FIELDS = ("title", "subtitle")
+MAX_NAME = 40
 MAX_TEXT = 200
 
 
 @router.get("")
-async def settings_page(request: Request, msg: str = "", err: str = ""):
+async def settings_page(
+    request: Request, msg: str = "", err: str = "", confirm_tab: str = ""
+):
     web.require_admin(request)
     return web.render(
         request,
@@ -20,6 +22,7 @@ async def settings_page(request: Request, msg: str = "", err: str = ""):
         uploads=uploads.list_uploads(web.data_dir()),
         msg=msg,
         err=err,
+        confirm_tab=confirm_tab,
     )
 
 
@@ -60,53 +63,51 @@ async def save_texts(request: Request):
     return web.redirect("/settings?msg=saved#texts")
 
 
-def link_fields(form) -> dict | None:
-    fields = {
-        key: str(form.get(key, ""))[:MAX_TEXT].strip()
-        for key in ("name", "url", "description", "icon")
-    }
-    if not fields["name"] or not portal_data.is_safe_url(fields["url"]):
-        return None
-    return fields
+@router.post("/dashboards", dependencies=[Depends(web.require_admin_form)])
+async def add_dashboard(request: Request):
+    form = await request.form()
+    name = str(form.get("name", ""))[:MAX_NAME].strip()
+
+    def change(state):
+        if name and len(state["dashboards"]) < tiles.MAX_DASHBOARDS:
+            state["dashboards"].append(store.new_dashboard(name))
+
+    store.update(web.data_dir(), change)
+    return web.redirect("/settings?msg=saved#dashboards")
 
 
-@router.post("/links", dependencies=[Depends(web.require_admin_form)])
-async def add_link(request: Request):
-    fields = link_fields(await request.form())
-    if fields is None:
-        return web.redirect("/settings?err=invalid_link#links")
-    store.update(
-        web.data_dir(), lambda state: state["links"].append(store.new_link(fields))
-    )
-    return web.redirect("/settings?msg=saved#links")
-
-
-@router.post("/links/{link_id}", dependencies=[Depends(web.require_admin_form)])
-async def edit_link(request: Request, link_id: str):
+@router.post(
+    "/dashboards/{dashboard_id}", dependencies=[Depends(web.require_admin_form)]
+)
+async def edit_dashboard(request: Request, dashboard_id: str):
     form = await request.form()
     action = form.get("action")
-    fields = link_fields(form)
-    if action == "save" and fields is None:
-        return web.redirect("/settings?err=invalid_link#links")
+    name = str(form.get("name", ""))[:MAX_NAME].strip()
+    if action == "delete" and form.get("confirm") != "yes":
+        board = store.find_dashboard(web.load_state(), dashboard_id)
+        target = f"?confirm_tab={board['id']}" if board else ""
+        return web.redirect(f"/settings{target}#dashboards")
     store.update(
         web.data_dir(),
-        lambda state: apply_link_action(state["links"], link_id, action, fields),
+        lambda state: apply_dashboard_action(
+            state["dashboards"], dashboard_id, action, name
+        ),
     )
-    return web.redirect("/settings?msg=saved#links")
+    return web.redirect("/settings?msg=saved#dashboards")
 
 
-def apply_link_action(links: list, link_id: str, action, fields) -> None:
-    index = next((i for i, link in enumerate(links) if link["id"] == link_id), None)
+def apply_dashboard_action(boards: list, board_id: str, action, name: str) -> None:
+    index = next((i for i, board in enumerate(boards) if board["id"] == board_id), None)
     if index is None:
         return
-    if action == "save":
-        links[index].update(fields)
-    elif action == "delete":
-        links.pop(index)
+    if action == "rename":
+        boards[index]["name"] = name
+    elif action == "delete" and len(boards) > 1:
+        boards.pop(index)
     elif action in ("up", "down"):
         target = index - 1 if action == "up" else index + 1
-        if 0 <= target < len(links):
-            links[index], links[target] = links[target], links[index]
+        if 0 <= target < len(boards):
+            boards[index], boards[target] = boards[target], boards[index]
 
 
 @router.post("/uploads", dependencies=[Depends(web.require_admin_form)])
