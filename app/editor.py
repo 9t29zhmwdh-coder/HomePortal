@@ -69,11 +69,16 @@ async def new_tile_page(
 @router.post("/{dashboard_id}/tiles", dependencies=[Depends(web.require_admin_form)])
 async def create_tile(request: Request, dashboard_id: str):
     form = await request.form()
-    tile_type = str(form.get("type", ""))
+    board = board_or_404(web.load_state(), dashboard_id)
+    # Redirects are built only from values found in the stored data or the type list,
+    # never from the request itself.
+    tile_type = next((key for key in tiles.TYPES if key == form.get("type")), None)
+    if tile_type is None:
+        raise HTTPException(status_code=404)
     config = tile_config(tile_type, form)
     if config is None:
         return web.redirect(
-            f"/edit/{dashboard_id}/tiles/new?type={tile_type}&err=invalid_tile"
+            f"/edit/{board['id']}/tiles/new?type={tile_type}&err=invalid_tile"
         )
 
     def change(state):
@@ -82,7 +87,7 @@ async def create_tile(request: Request, dashboard_id: str):
             board["tiles"].append(tiles.new_tile(tile_type, config, board["tiles"]))
 
     store.update(web.data_dir(), change)
-    return web.redirect(f"/edit/{dashboard_id}")
+    return web.redirect(f"/edit/{board['id']}")
 
 
 @router.get("/{dashboard_id}/tiles/{tile_id}")
@@ -99,16 +104,17 @@ async def tile_page(request: Request, dashboard_id: str, tile_id: str, err: str 
 )
 async def save_tile(request: Request, dashboard_id: str, tile_id: str):
     form = await request.form()
-    tile = tile_or_404(board_or_404(web.load_state(), dashboard_id), tile_id)
+    board = board_or_404(web.load_state(), dashboard_id)
+    tile = tile_or_404(board, tile_id)
     config = tile_config(tile["type"], form)
     if config is None:
-        return web.redirect(f"/edit/{dashboard_id}/tiles/{tile_id}?err=invalid_tile")
+        return web.redirect(f"/edit/{board['id']}/tiles/{tile['id']}?err=invalid_tile")
 
     def change(state):
         tile_or_404(board_or_404(state, dashboard_id), tile_id)["config"] = config
 
     store.update(web.data_dir(), change)
-    return web.redirect(f"/edit/{dashboard_id}")
+    return web.redirect(f"/edit/{board['id']}")
 
 
 @router.post(
@@ -116,12 +122,14 @@ async def save_tile(request: Request, dashboard_id: str, tile_id: str):
     dependencies=[Depends(web.require_admin_form)],
 )
 async def delete_tile(dashboard_id: str, tile_id: str):
+    board_id = board_or_404(web.load_state(), dashboard_id)["id"]
+
     def change(state):
         board = board_or_404(state, dashboard_id)
         board["tiles"] = [tile for tile in board["tiles"] if tile["id"] != tile_id]
 
     store.update(web.data_dir(), change)
-    return web.redirect(f"/edit/{dashboard_id}")
+    return web.redirect(f"/edit/{board_id}")
 
 
 def tile_config(tile_type: str, form) -> dict | None:

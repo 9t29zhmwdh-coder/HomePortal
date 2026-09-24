@@ -84,7 +84,9 @@ async def edit_dashboard(request: Request, dashboard_id: str):
     action = form.get("action")
     name = str(form.get("name", ""))[:MAX_NAME].strip()
     if action == "delete" and form.get("confirm") != "yes":
-        return web.redirect(f"/settings?confirm_tab={dashboard_id}#dashboards")
+        board = store.find_dashboard(web.load_state(), dashboard_id)
+        target = f"?confirm_tab={board['id']}" if board else ""
+        return web.redirect(f"/settings{target}#dashboards")
     store.update(
         web.data_dir(),
         lambda state: apply_dashboard_action(
