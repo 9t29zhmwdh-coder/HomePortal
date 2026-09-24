@@ -45,7 +45,7 @@ jobs:
         run: |
           # A requirements.txt change without a new lock would ship untested versions.
           uv pip compile requirements.txt --universal --python-version 3.12 --generate-hashes --no-header -q -o fresh.lock
-          diff <(grep -v '^#' requirements.lock) <(grep -v '^#' fresh.lock)
+          diff <(grep -v -e '^#' -e '^$' requirements.lock) <(grep -v -e '^#' -e '^$' fresh.lock)
       - name: Known vulnerabilities
         run: pip-audit -r requirements.lock --progress-spinner off
 
