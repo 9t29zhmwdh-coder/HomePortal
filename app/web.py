@@ -6,13 +6,14 @@ from fastapi import HTTPException, Request
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 
-from app import auth, catalog, i18n, store
+from app import auth, catalog, i18n, store, tiles
 from app import portal as portal_data
 
 BASE_DIR = Path(__file__).resolve().parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 templates.env.globals["caption_for"] = portal_data.caption_for
 templates.env.globals["catalog"] = catalog
+templates.env.globals["catalog_tiles"] = tiles
 
 
 class LoginRequired(Exception):
@@ -58,6 +59,20 @@ async def require_admin_form(request: Request) -> dict:
     session = require_admin(request)
     form = await request.form()
     if form.get("csrf") != session["csrf"]:
+        raise HTTPException(status_code=403)
+    return session
+
+
+def require_admin_json(request: Request) -> dict:
+    """For fetch() calls from the editor: session plus the CSRF token in a header.
+
+    A cross-site page cannot set a custom header without a CORS preflight, which
+    this app never answers, so the header check holds even without the cookie flag.
+    """
+    session = session_of(request)
+    if session is None:
+        raise HTTPException(status_code=401)
+    if request.headers.get("x-csrf-token") != session["csrf"]:
         raise HTTPException(status_code=403)
     return session
 

@@ -23,9 +23,11 @@
 - Optional password for viewing
 - Fixed: login lockout behind Nginx would have hit every client at once
 
-## v1.4.0, Grid and Tabs, Planned
-- [ ] Tiles in sizes (1x1, 2x1, 2x2, ...) placed by drag and drop
-- [ ] Several dashboards as tabs
+## v1.4.0, Grid and Tabs (2026-09-24)
+- Six-column grid, tiles in fixed sizes per type, placed by drag and drop in an edit mode
+- Tile types: link, note, photo album
+- Several tabs, each its own page; managed in the settings
+- Layout validated on the server; phones fold the grid into two columns
 
 ## v1.5.0, Live Tiles, Planned
 - [ ] Home Assistant entity values (token stays on the server)

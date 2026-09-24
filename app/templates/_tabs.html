@@ -1,0 +1,9 @@
+{% if state.dashboards | length > 1 %}
+<nav class="tabs" aria-label="{{ t('tabs') }}">
+  {% for tab in state.dashboards %}
+  {% if edit_mode %}{% set href = '/edit/' ~ tab.id %}{% elif loop.first %}{% set href = '/' %}{% else %}{% set href = '/d/' ~ tab.id %}{% endif %}
+  <a href="{{ href }}" class="tab{% if tab.id == board.id %} active{% endif %}"
+     {% if tab.id == board.id %}aria-current="page"{% endif %}>{{ tab.name or t('home_tab') }}</a>
+  {% endfor %}
+</nav>
+{% endif %}

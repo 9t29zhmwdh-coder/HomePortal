@@ -1,0 +1,31 @@
+{% extends "_base.html" %}
+{% set c = tile.config %}
+{% set is_new = not tile.id %}
+{% block title %}{{ t('tile_' ~ tile.type) }} · {{ state.site.title }}{% endblock %}
+{% block body %}
+<form class="panel narrow wide-form" method="post"
+      action="{{ '/edit/' ~ board.id ~ '/tiles' if is_new else '/edit/' ~ board.id ~ '/tiles/' ~ tile.id }}">
+  <h1>{{ t('new_tile') if is_new else t('edit_tile') }}: {{ t('tile_' ~ tile.type) }}</h1>
+  {% if err %}<p class="error">{{ t(err) }}</p>{% endif %}
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  <input type="hidden" name="type" value="{{ tile.type }}">
+
+  {% if tile.type == 'link' %}
+  <label>{{ t('name') }}<input name="name" value="{{ c.name }}" required maxlength="200" autofocus></label>
+  <label>{{ t('url') }}<input name="url" type="url" value="{{ c.url }}" placeholder="http://192.168.1.10:5000" required maxlength="200"></label>
+  <label>{{ t('description') }}<input name="description" value="{{ c.description }}" maxlength="200"></label>
+  <label>{{ t('icon') }}<input name="icon" value="{{ c.icon }}" placeholder="🏠" maxlength="8" class="icon-input short"></label>
+  {% elif tile.type == 'note' %}
+  <label>{{ t('title') }}<input name="title" value="{{ c.title }}" maxlength="200" autofocus></label>
+  <label>{{ t('note_text') }}<textarea name="text" rows="6" maxlength="2000">{{ c.text }}</textarea></label>
+  {% elif tile.type == 'album' %}
+  <label>{{ t('title') }}<input name="title" value="{{ c.title }}" placeholder="{{ t('album') }}" maxlength="200" autofocus></label>
+  <p class="dim">{{ t('photos_hint') }}</p>
+  {% endif %}
+
+  <p class="form-actions">
+    <button type="submit">{{ t('save') }}</button>
+    <a class="button ghost" href="/edit/{{ board.id }}">{{ t('cancel') }}</a>
+  </p>
+</form>
+{% endblock %}

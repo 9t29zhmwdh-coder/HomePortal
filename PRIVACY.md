@@ -3,7 +3,7 @@
 HomePortal is a self-hosted application. Everything it stores stays in the
 data folder on your own server:
 
-- `portal.json`: your links, page texts and appearance settings
+- `portal.json`: your tabs, tiles, page texts and appearance settings
 - `auth.json`: a hash of the admin password, never the password itself
 - `uploads/`: background images you uploaded, saved again without location or camera data
 - `photos/`: your album pictures, which HomePortal only reads

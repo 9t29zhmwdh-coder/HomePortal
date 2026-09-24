@@ -1,38 +1,30 @@
 {% extends "_base.html" %}
+{% from "_tiles.html" import tile_body, placement %}
 {% block body %}
 <header class="page-head">
   <div>
     <h1>{{ state.site.title }}</h1>
     {% if state.site.subtitle %}<p>{{ state.site.subtitle }}</p>{% endif %}
   </div>
-  <a class="gear" href="/settings" title="{{ t('settings') }}" aria-label="{{ t('settings') }}">⚙︎</a>
+  <nav class="head-actions">
+    {% if logged_in %}<a class="gear" href="/edit/{{ board.id }}" title="{{ t('edit_tab') }}" aria-label="{{ t('edit_tab') }}">✎</a>{% endif %}
+    <a class="gear" href="/settings" title="{{ t('settings') }}" aria-label="{{ t('settings') }}">⚙︎</a>
+  </nav>
 </header>
 
-{% if not state.links %}
+{% include "_tabs.html" %}
+
+{% if not board.tiles %}
 <div class="notice">
-  <p><strong>{{ t('no_links_title') }}</strong> {{ t('no_links_body') }}</p>
+  <p><strong>{{ t('empty_tab_title') }}</strong>
+  {% if logged_in %}{{ t('empty_tab_admin') }}{% else %}{{ t('empty_tab_body') }}{% endif %}</p>
 </div>
 {% else %}
-<h2>{{ state.site.links_heading or t('links') }}</h2>
-<div class="links-grid">
-  {% for link in state.links %}
-  <a class="link-card" href="{{ link.url }}">
-    {% if link.icon %}<span class="icon">{{ link.icon }}</span>{% endif %}
-    <span class="name">{{ link.name }}</span>
-    {% if link.description %}<span class="desc">{{ link.description }}</span>{% endif %}
-  </a>
-  {% endfor %}
-</div>
-{% endif %}
-
-{% if photos %}
-<h2>{{ state.site.album_heading or t('album') }}</h2>
-<div class="album-grid">
-  {% for name in photos %}
-  <figure>
-    <img src="/photos/{{ name | urlencode }}" alt="{{ caption_for(name) }}" loading="lazy">
-    <figcaption>{{ caption_for(name) }}</figcaption>
-  </figure>
+<div class="board">
+  {% for tile in board.tiles | sort(attribute='x') | sort(attribute='y') %}
+  <section class="tile tile-{{ tile.type }}" style="{{ placement(tile) }}">
+    {{ tile_body(tile, photos, t) }}
+  </section>
   {% endfor %}
 </div>
 {% endif %}

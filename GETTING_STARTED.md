@@ -193,12 +193,15 @@ Go to `http://localhost` in your browser.
 
 After `docker compose up -d --build` finishes, two containers run in the background: the FastAPI app and an Nginx reverse proxy in front of it. Opening the portal address in your browser shows the Home Portal page. On the very first start it has no links yet and says so.
 
-## Set a password and add your links
+## Set a password and add your tiles
 
 1. Click the gear icon at the top right. Home Portal asks for an admin password (at least 10 characters). Do this right away: whoever sets it first can change the portal.
-2. You land in the settings. Under **Links**, add your services: a name and an address starting with `http://` or `https://`, optionally a description and an emoji.
-3. Under **Appearance**, pick a theme, a background, a font and the language, then **Save**. To use your own picture as background, choose it under **Upload an image**.
-4. Click **Back to the portal**. That is it.
+2. You land in the settings. Under **Appearance**, pick a theme, a background, a font and the language, then **Save**. To use your own picture as background, choose it under **Upload an image**.
+3. Click **Back to the portal**, then the pencil icon next to the gear. This is the edit mode for the current tab.
+4. Under **New tile**, choose **Link** and click **Add**. Enter a name and an address starting with `http://` or `https://`, optionally a description and an emoji, and save. Repeat for your other services.
+5. Drag tiles by their ⠿ handle to where you want them, pick sizes from the list on each tile, and click **Save layout**, then **Done**.
+
+More tabs (for example "Media" or "Technology") are added in the settings under **Tabs**.
 
 For the album, copy photos into the `photos` folder inside your `DATA_PATH` folder (create it if it is not there), then reload the page.
 
@@ -234,7 +237,9 @@ docker compose up -d --build
 | "Cannot connect to the Docker daemon" | Docker Desktop / the Docker service isn't running | Windows/macOS: open Docker Desktop and wait for it to say "running". Linux: `sudo systemctl start docker` |
 | Windows: error mentioning WSL2 when starting Docker Desktop | WSL2 missing or outdated | Open PowerShell as Administrator, run `wsl --install`, then restart your computer |
 | Browser shows "connection refused" at `http://localhost` or `http://YOUR-HOST` | Containers still starting, or wrong host/IP used | Wait a minute and retry; run `docker compose logs -f app` to check for errors; confirm you're using the correct IP if running on a NAS/remote server |
-| Settings say the address is not valid | It does not start with `http://` or `https://` | Write the full address, e.g. `http://192.168.1.10:5000` |
+| A link tile is refused as not valid | It does not start with `http://` or `https://` | Write the full address, e.g. `http://192.168.1.10:5000` |
 | "Too many attempts" at login | Five wrong passwords within five minutes | Wait five minutes |
 | Forgot the admin password | Only its hash is stored | Stop the container, delete `auth.json` in `DATA_PATH`, start again and set a new password; links and settings stay |
 | Photos do not show | Wrong folder or format | They must be in `DATA_PATH/photos/` as `.jpg`, `.png`, `.webp` or `.gif` |
+| "Layout not saved (layout_overlap)" | Two tiles would sit on the same cells | Move one of them, then save again |
+| Leaving the edit mode asks whether to leave the page | The layout has unsaved changes | Click **Save layout** first |

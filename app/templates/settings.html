@@ -110,37 +110,39 @@
     <input type="hidden" name="csrf" value="{{ csrf }}">
     <label>{{ t('title') }}<input name="title" value="{{ state.site.title }}" maxlength="200"></label>
     <label>{{ t('subtitle') }}<input name="subtitle" value="{{ state.site.subtitle }}" maxlength="200"></label>
-    <label>{{ t('links_heading') }}<input name="links_heading" value="{{ state.site.links_heading }}" placeholder="{{ t('links') }}" maxlength="200"></label>
-    <label>{{ t('album_heading') }}<input name="album_heading" value="{{ state.site.album_heading }}" placeholder="{{ t('album') }}" maxlength="200"></label>
     <p><button type="submit">{{ t('save') }}</button></p>
   </form>
 </section>
 
-<section class="panel" id="links">
-  <h2>{{ t('links') }}</h2>
-  {% for link in state.links %}
-  <form method="post" action="/settings/links/{{ link.id }}" class="link-row">
+<section class="panel" id="dashboards">
+  <h2>{{ t('tabs') }}</h2>
+  <p class="dim">{{ t('tabs_intro') }}</p>
+  {% for tab in state.dashboards %}
+  <form method="post" action="/settings/dashboards/{{ tab.id }}" class="tab-row">
     <input type="hidden" name="csrf" value="{{ csrf }}">
-    <input name="icon" value="{{ link.icon }}" aria-label="{{ t('icon') }}" class="icon-input" maxlength="8">
-    <input name="name" value="{{ link.name }}" aria-label="{{ t('name') }}" required maxlength="200">
-    <input name="url" value="{{ link.url }}" aria-label="{{ t('url') }}" type="url" required maxlength="200">
-    <input name="description" value="{{ link.description }}" aria-label="{{ t('description') }}" maxlength="200">
+    <input name="name" value="{{ tab.name }}" placeholder="{{ t('home_tab') }}" aria-label="{{ t('name') }}" maxlength="40">
     <span class="row-actions">
-      <button name="action" value="save">{{ t('save') }}</button>
-      <button name="action" value="up" class="ghost" formnovalidate {% if loop.first %}disabled{% endif %}>↑<span class="sr">{{ t('move_up') }}</span></button>
-      <button name="action" value="down" class="ghost" formnovalidate {% if loop.last %}disabled{% endif %}>↓<span class="sr">{{ t('move_down') }}</span></button>
-      <button name="action" value="delete" class="ghost danger" formnovalidate>{{ t('delete') }}</button>
+      <button name="action" value="rename">{{ t('save') }}</button>
+      <a class="button ghost" href="/edit/{{ tab.id }}">{{ t('edit_tiles') }} ({{ tab.tiles | length }})</a>
+      <button name="action" value="up" class="ghost" {% if loop.first %}disabled{% endif %}>↑<span class="sr">{{ t('move_up') }}</span></button>
+      <button name="action" value="down" class="ghost" {% if loop.last %}disabled{% endif %}>↓<span class="sr">{{ t('move_down') }}</span></button>
+      <button name="action" value="delete" class="ghost danger" {% if state.dashboards | length == 1 %}disabled{% endif %}>{{ t('delete') }}</button>
     </span>
   </form>
-  {% endfor %}
-  <h3>{{ t('add_link') }}</h3>
-  <form method="post" action="/settings/links" class="link-row">
+  {% if confirm_tab == tab.id %}
+  <form method="post" action="/settings/dashboards/{{ tab.id }}" class="notice notice-warn confirm-row">
     <input type="hidden" name="csrf" value="{{ csrf }}">
-    <input name="icon" placeholder="🏠" aria-label="{{ t('icon') }}" class="icon-input" maxlength="8">
-    <input name="name" placeholder="{{ t('name') }}" required maxlength="200">
-    <input name="url" placeholder="http://192.168.1.10:5000" type="url" required maxlength="200">
-    <input name="description" placeholder="{{ t('description') }}" maxlength="200">
-    <span class="row-actions"><button type="submit">{{ t('add_link') }}</button></span>
+    <input type="hidden" name="confirm" value="yes">
+    <span>{{ t('confirm_delete_tab') | replace('{name}', tab.name or t('home_tab')) | replace('{count}', tab.tiles | length | string) }}</span>
+    <button name="action" value="delete" class="danger-solid">{{ t('delete') }}</button>
+    <a class="button ghost" href="/settings#dashboards">{{ t('cancel') }}</a>
+  </form>
+  {% endif %}
+  {% endfor %}
+  <form method="post" action="/settings/dashboards" class="tab-row">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <input name="name" placeholder="{{ t('new_tab_placeholder') }}" required maxlength="40">
+    <span class="row-actions"><button type="submit">+ {{ t('add_tab') }}</button></span>
   </form>
   <p class="dim">{{ t('photos_hint') }}</p>
 </section>
