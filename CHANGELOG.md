@@ -3,6 +3,22 @@
 All notable changes to HomePortal will be documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.6.0] - 2026-09-24
+
+### Added
+
+- App tile: another web app shown inside a tile, in sizes from 2x2 to 6x4.
+- App tab: a tab with an app address shows that app across the whole page instead of tiles.
+- Before embedding, the portal reads the app's `X-Frame-Options` and `Content-Security-Policy: frame-ancestors`. When the app refuses, the tile says which header refused and offers to open the app in a new tab, instead of the empty box a browser would show. A `frame-ancestors` list that names the portal's own address counts as allowed.
+- The README explains how to allow embedding in Home Assistant (`http: use_x_frame_options: false`); its default, `SAMEORIGIN`, was checked in the Home Assistant source.
+
+### Security
+
+- Home Portal's own responses carry `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff` and `Referrer-Policy: same-origin`, so another site cannot frame the settings page to trick a click.
+- App addresses accept only `http(s)` URLs; frames load with `referrerpolicy="no-referrer"`.
+
+---
+
 ## [1.5.0] - 2026-09-24
 
 ### Added

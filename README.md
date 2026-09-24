@@ -124,7 +124,7 @@ portal, so do this right after `docker compose up`.
 |---|---|
 | Appearance | Theme (Midnight, Glass, Sunrise, Playful, Paper), background (none, four drawn patterns, seven bundled photos, or your own upload), font (Inter, Nunito, Fredoka, Playfair Display, JetBrains Mono), language (browser, English, German) |
 | Page texts | Title and subtitle |
-| Tabs | Add, rename, reorder, delete (with confirmation); each tab is its own page of tiles |
+| Tabs | Add, rename, reorder, delete (with confirmation); each tab is its own page of tiles, or, with an app address, one app across the whole page |
 | Connections | Home Assistant address and long-lived access token, with a connection test |
 | Access | Require the password to view the page too; change the password |
 
@@ -141,6 +141,7 @@ sizes on a six-column grid, so the page stays tidy wherever they end up:
 | Status | 1×1, 2×1; green or red and the response time for any `http(s)` address |
 | Clock | 1×1, 2×1, 2×2; optional time zone |
 | Weather | 1×1, 2×1, 2×2; current weather, today's low and high, wind, for a place you type in |
+| App | 2×2 up to 6×4; another web app shown inside the tile |
 
 Live tiles refresh every 30 seconds without reloading the page. Without
 JavaScript they show the values from when the page was loaded.
@@ -155,6 +156,22 @@ Home Assistant under your profile, Security, Long-lived access tokens. The
 token is kept in `connections.json` (mode 0600), apart from the other settings,
 and never sent to the browser. Changing the address asks for the token again,
 so it cannot be pointed at another server.
+
+**Apps.** An app tile or app tab shows another web app inside Home Portal.
+Many apps forbid that with an `X-Frame-Options` or `Content-Security-Policy:
+frame-ancestors` header, and a browser then shows an empty box. Home Portal
+reads those headers first and, when the app refuses, says so and offers a
+button to open it in a new tab instead. Home Assistant sends
+`X-Frame-Options: SAMEORIGIN` by default; to embed it, add this to its
+`configuration.yaml` and restart it:
+
+```yaml
+http:
+  use_x_frame_options: false
+```
+
+A portal served over `https://` can only embed apps on `https://`; browsers
+block `http://` content inside a secure page.
 
 **Album.** Photos come from the `photos` folder in `DATA_PATH`
 (`.jpg`, `.png`, `.webp`, `.gif`, up to 60, sorted by name, file name becomes

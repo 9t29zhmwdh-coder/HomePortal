@@ -68,7 +68,29 @@
     <p class="desc">{{ t(symbol[1]) }} · {{ data.low }}° / {{ data.high }}° · {{ data.wind }} km/h</p>
     {% else %}<p class="desc">…</p>{% endif %}
   </div>
+{%- elif tile.type == 'app' -%}
+  {{ app_frame(c.name, c.url, c.icon, data, t, preview) }}
 {%- endif -%}
+{%- endmacro %}
+
+{% macro app_frame(name, url, icon, data, t, preview=false) -%}
+<div class="tile-inner app-card">
+  <div class="app-bar">
+    <span class="app-name">{% if icon %}{{ icon }} {% endif %}{{ name }}</span>
+    <a class="app-open" href="{{ url }}" target="_blank" rel="noopener noreferrer" title="{{ t('open_in_new_tab') }}">↗</a>
+  </div>
+  {% if preview %}
+  <div class="app-placeholder"><span class="dim">{{ url }}</span></div>
+  {% elif data.embeddable %}
+  <iframe src="{{ url }}" title="{{ name }}" loading="lazy" referrerpolicy="no-referrer" allow="fullscreen"></iframe>
+  {% else %}
+  <div class="app-placeholder">
+    <p class="live-error">{{ t(data.reason or 'embed_unreachable') }}</p>
+    <p class="dim">{{ t('embed_hint') }}</p>
+    <a class="button" href="{{ url }}" target="_blank" rel="noopener noreferrer">{{ t('open_in_new_tab') }}</a>
+  </div>
+  {% endif %}
+</div>
 {%- endmacro %}
 
 {% macro placement(tile) -%}

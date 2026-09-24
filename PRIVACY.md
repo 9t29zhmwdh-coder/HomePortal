@@ -12,6 +12,7 @@ data folder on your own server:
 - **No telemetry:** HomePortal does not collect usage data or phone home.
 - **Requests from the server:** Home Assistant tiles ask your Home Assistant, status tiles ask the addresses you entered whether they answer (nothing is read from them), both from the portal server, never from the browser.
 - **One request to the internet, only if you add it:** a weather tile sends the coordinates of its place to [Open-Meteo](https://open-meteo.com) every 15 minutes, and the place name once when you save the tile. Without a weather tile, nothing leaves your network.
+- **Embedded apps** are loaded by your browser straight from the app; the portal server only reads their response headers to see whether they allow being embedded.
 - **Bundled assets:** fonts, patterns and background photos load from your server.
 - **One cookie:** a session cookie for the logged-in admin. Visitors who only view the page get none.
 - **Who can see it:** anyone who can reach the port on your network, unless you require the password for viewing in the settings. Do not expose it to the internet without that, since your photos are on it.

@@ -246,4 +246,5 @@ docker compose up -d --build
 | "Layout not saved (layout_overlap)" | Two tiles would sit on the same cells | Move one of them, then save again |
 | Home Assistant tile says the token was refused | Token revoked or mistyped | Create a new long-lived token in Home Assistant and save it under **Connections** |
 | Home Assistant tile says Home Assistant does not answer | Wrong address, or the portal server cannot reach it | Open the address from the NAS or server that runs Home Portal; use the IP address rather than a `.local` name |
+| An app tile says the app does not allow being shown inside another page | The app sends `X-Frame-Options` or a CSP `frame-ancestors` rule | Use the button to open it in a new tab, or allow embedding in the app; for Home Assistant see the README |
 | Leaving the edit mode asks whether to leave the page | The layout has unsaved changes | Click **Save layout** first |

@@ -63,6 +63,10 @@ swaps in the server-rendered tile; clocks tick in the browser.
 - **Status**: a streamed `GET` that stops after the headers; any answer below
   500 counts as up. Certificates are not verified here, since home services
   often use self-signed ones and nothing is read.
+- **App**: a streamed `GET` reads `X-Frame-Options` and CSP `frame-ancestors`;
+  the tile embeds the app only if neither refuses the portal's origin, and
+  otherwise explains why and links to it. Checked when the page renders,
+  cached for ten minutes, never refreshed by `live.js`.
 - **Weather**: Open-Meteo forecast API with the coordinates found by its
   geocoding API when the tile is saved.
 
@@ -79,6 +83,9 @@ swaps in the server-rendered tile; clocks tick in the browser.
   rotates the signing key and ends every session.
 - **Login lockout**: five failures per client address within five minutes.
   Nginx overwrites `X-Forwarded-For`, so the address cannot be forged from outside.
+- **Own headers**: every response carries `X-Frame-Options: SAMEORIGIN`,
+  `X-Content-Type-Options: nosniff` and `Referrer-Policy: same-origin`, so
+  other sites cannot frame the settings page.
 - **Home Assistant token**: stored apart from `portal.json`, never rendered; a
   changed address requires entering the token again, so a hijacked session
   cannot redirect it to another server.

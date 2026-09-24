@@ -124,7 +124,7 @@ besitzt das Portal, also gleich nach `docker compose up` erledigen.
 |---|---|
 | Aussehen | Theme (Mitternacht, Glas, Morgenrot, Verspielt, Papier), Hintergrund (keiner, vier gezeichnete Muster, sieben mitgelieferte Fotos oder ein eigenes Bild), Schrift (Inter, Nunito, Fredoka, Playfair Display, JetBrains Mono), Sprache (wie der Browser, Englisch, Deutsch) |
 | Texte der Seite | Titel und Untertitel |
-| Reiter | Hinzufügen, umbenennen, umsortieren, löschen (mit Rückfrage); jeder Reiter ist eine eigene Seite mit Kacheln |
+| Reiter | Hinzufügen, umbenennen, umsortieren, löschen (mit Rückfrage); jeder Reiter ist eine eigene Seite mit Kacheln oder, mit einer App-Adresse, eine App über die ganze Seite |
 | Verbindungen | Adresse und langlebiges Zugriffstoken von Home Assistant, mit Verbindungstest |
 | Zugriff | Passwort auch zum Ansehen verlangen; Passwort ändern |
 
@@ -142,6 +142,7 @@ aufgeräumt, egal wo sie landen:
 | Status | 1×1, 2×1; grün oder rot und die Antwortzeit für eine beliebige `http(s)`-Adresse |
 | Uhr | 1×1, 2×1, 2×2; Zeitzone wählbar |
 | Wetter | 1×1, 2×1, 2×2; aktuelles Wetter, Tiefst- und Höchstwert des Tages, Wind, für einen eingetippten Ort |
+| App | 2×2 bis 6×4; eine andere Web-App, direkt in der Kachel |
 
 Live-Kacheln aktualisieren sich alle 30 Sekunden, ohne dass die Seite neu
 lädt. Ohne JavaScript zeigen sie die Werte vom Zeitpunkt des Aufrufs.
@@ -158,6 +159,23 @@ Langlebige Zugriffstoken erstellst. Der Token liegt in `connections.json`
 (Modus 0600), getrennt von den übrigen Einstellungen, und geht nie an den
 Browser. Wer die Adresse ändert, muss den Token neu eingeben, damit er nicht
 an einen anderen Server umgeleitet werden kann.
+
+**Apps.** Eine App-Kachel oder ein App-Reiter zeigt eine andere Web-App
+direkt in Home Portal. Viele Apps verbieten das mit einem Header
+`X-Frame-Options` oder `Content-Security-Policy: frame-ancestors`, und der
+Browser zeigt dann ein leeres Feld. Home Portal liest diese Header vorher und
+sagt, wenn eine App ablehnt, das auch so, mit einem Knopf zum Öffnen in einem
+neuen Tab. Home Assistant schickt standardmässig
+`X-Frame-Options: SAMEORIGIN`; zum Einbetten in seiner `configuration.yaml`
+eintragen und neu starten:
+
+```yaml
+http:
+  use_x_frame_options: false
+```
+
+Läuft das Portal über `https://`, lassen sich nur Apps mit `https://`
+einbetten.
 
 **Album.** Die Fotos kommen aus dem Ordner `photos` in `DATA_PATH`
 (`.jpg`, `.png`, `.webp`, `.gif`, bis zu 60, nach Dateiname sortiert, der

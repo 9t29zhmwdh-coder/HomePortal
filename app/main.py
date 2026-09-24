@@ -5,7 +5,18 @@ from fastapi.staticfiles import StaticFiles
 from app import auth, editor, live, settings, store, tiles, uploads, web
 from app import portal as portal_data
 
-app = FastAPI(title="Home Portal", version="1.5.0")
+app = FastAPI(title="Home Portal", version="1.6.0")
+
+
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    response = await call_next(request)
+    # Home Portal itself must not be framed by other sites (clickjacking on the settings).
+    response.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("Referrer-Policy", "same-origin")
+    return response
+
 
 app.mount("/static", StaticFiles(directory=str(web.BASE_DIR / "static")), name="static")
 app.include_router(settings.router)
@@ -35,7 +46,10 @@ async def show_dashboard(request: Request, dashboard_id: str | None):
     if board is None:
         raise HTTPException(status_code=404)
     photos = portal_data.list_photos(web.data_dir())
-    values = await live.board_data(board, web.data_dir())
+    origin = str(request.base_url)
+    values = await live.board_data(board, web.data_dir(), origin)
+    if board.get("app_url"):
+        values["tab-app"] = await live.embed_status(board["app_url"], origin)
     return web.render(
         request, "index.html", state, board=board, photos=photos, live=values
     )
