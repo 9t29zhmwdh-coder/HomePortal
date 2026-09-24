@@ -9,7 +9,7 @@ def test_fresh_install_shows_hint_and_no_fake_links(client):
     response = client.get("/")
     assert response.status_code == 200
     assert 'href="#"' not in response.text
-    assert "This tab is empty." in response.text
+    assert "Welcome to your Home Portal" in response.text
 
 
 def test_legacy_yaml_becomes_tiles_once(client, example_data):

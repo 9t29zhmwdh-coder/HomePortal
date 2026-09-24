@@ -159,6 +159,13 @@ STRINGS = {
         "invalid_app_url": "The app address must start with http:// or https://.",
         "size_block-3": "Block, 3 rows",
         "size_full-4": "Full width, 4 rows",
+        "welcome_title": "Welcome to your Home Portal",
+        "welcome_step_login": "Click the gear at the top right and set an admin password.",
+        "welcome_step_look": "Under Appearance, pick a theme, a background photo or your own picture, and a font.",
+        "welcome_step_tiles": "Back here, the pencil opens the edit mode: add links, Home Assistant values, service status, clock, weather, notes, your photos or whole apps, and drag them into place.",
+        "welcome_tip": "Photos for the album go into the photos folder in your data directory.",
+        "welcome_start": "Set up now",
+        "welcome_start_edit": "Add tiles",
     },
     "de": {
         "links": "Links",
@@ -318,6 +325,13 @@ STRINGS = {
         "invalid_app_url": "Die App-Adresse muss mit http:// oder https:// beginnen.",
         "size_block-3": "Block, 3 Reihen",
         "size_full-4": "Ganze Breite, 4 Reihen",
+        "welcome_title": "Willkommen in deinem Home Portal",
+        "welcome_step_login": "Oben rechts auf das Zahnrad klicken und ein Admin-Passwort festlegen.",
+        "welcome_step_look": "Unter Aussehen ein Theme, ein Hintergrundfoto oder ein eigenes Bild und eine Schrift wählen.",
+        "welcome_step_tiles": "Zurück hier öffnet der Stift den Bearbeiten-Modus: Links, Werte aus Home Assistant, Status von Diensten, Uhr, Wetter, Notizen, deine Fotos oder ganze Apps hinzufügen und an ihren Platz ziehen.",
+        "welcome_tip": "Fotos fürs Album kommen in den Ordner photos in deinem Datenverzeichnis.",
+        "welcome_start": "Jetzt einrichten",
+        "welcome_start_edit": "Kacheln hinzufügen",
     },
 }
 

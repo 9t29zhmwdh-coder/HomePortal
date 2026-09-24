@@ -21,6 +21,9 @@ Home Portal is now a home dashboard: tabs of tiles you arrange yourself, live va
 
 - README and tagline describe a dashboard, not a page of links.
 - The session cookie gets the `Secure` flag when the request arrives over HTTPS; Nginx forwards `X-Forwarded-Proto` from a TLS proxy in front.
+- New installations start with the Glass theme and the bundled alpine lake photo instead of a plain dark page; an existing saved appearance is kept.
+- An empty tab shows a short welcome in three steps (password, appearance, tiles) with a button to start, instead of one line saying it is empty.
+- The photo album fills its tile: a few photos stretch across it instead of leaving most of the tile empty.
 
 ### Upgrading
 
