@@ -10,3 +10,4 @@ static/uploads/
 *.sqlite
 *.log
 .DS_Store
+.coverage

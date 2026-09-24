@@ -62,6 +62,33 @@ jobs:
           curl -sf -o /dev/null -w '%{content_type}\n' http://localhost/photos/beach-day.jpg | grep -q image/jpeg
           curl -sf http://localhost/static/css/style.css | grep -q link-card
           test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost/photos/..%2Fportal.yaml)" = 404
+      - name: Set up, log in and upload through Nginx
+        run: |
+          set -e
+          jar=$(mktemp)
+          pw=ci-smoke-password-123
+          curl -sf -c "$jar" -o /dev/null -d "password=$pw&confirm=$pw" http://localhost/setup
+          csrf=$(curl -sf -b "$jar" http://localhost/settings | grep -o 'name="csrf" value="[^"]*"' | head -1 | cut -d'"' -f4)
+          test -n "$csrf"
+          # 3 MB of noise: Nginx must pass it on (no 413), the app must refuse it as not an image.
+          head -c 3000000 /dev/urandom > big.bin
+          location=$(curl -s -b "$jar" -o /dev/null -w '%{redirect_url}' -F "csrf=$csrf" -F "image=@big.bin;type=image/jpeg" http://localhost/settings/uploads)
+          echo "$location" | grep -q upload_not_an_image
+          curl -sf -b "$jar" -o /dev/null -d "csrf=$csrf&theme=glass&font=nunito&language=de&background=photo:aurora" http://localhost/settings/appearance
+          curl -sf http://localhost/ | grep -q 'theme-glass bg-image'
+          curl -sf -o /dev/null http://localhost/static/backgrounds/aurora.jpg
+      - name: Data folder holds only what the app wrote
+        run: |
+          ls -la /tmp/homeportal-data
+          test -f /tmp/homeportal-data/portal.json
+          sudo grep -q argon2 /tmp/homeportal-data/auth.json
+      - name: Login lockout cannot be dodged with a forged X-Forwarded-For
+        run: |
+          for i in 1 2 3 4 5; do
+            curl -s -o /dev/null -H "X-Forwarded-For: 10.0.0.$i" -d "password=wrong" http://localhost/login
+          done
+          location=$(curl -s -o /dev/null -w '%{redirect_url}' -H "X-Forwarded-For: 10.0.0.99" -d "password=ci-smoke-password-123" http://localhost/login)
+          echo "$location" | grep -q login_locked
       - name: Tear down
         if: always()
         run: docker compose down

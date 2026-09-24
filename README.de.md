@@ -18,17 +18,18 @@ Ferien du auch nicht mehr.
 
 Home Portal ist eine Startseite mit genau diesen Links darauf, dazu ein kleines
 Fotoalbum, als Docker-Container auf dem NAS oder Server, den du ohnehin
-betreibst.
+betreibst. Eingerichtet wird im Browser: Links, ein Theme, ein Hintergrundfoto
+oder ein eigenes Bild, eine Schrift, Deutsch oder Englisch.
 
-**Nichts für dich, wenn** du ein Dashboard mit Live-Status, Sensorwerten oder
-Service-Health willst. Da sind Homer, Heimdall und Dashy weiter. Das hier ist
-bewusst eine Linkseite, keine Überwachungsoberfläche.
+**Nichts für dich, wenn** du heute schon Live-Status, Sensorwerte oder
+Service-Health brauchst. Das zeigen Homer, Heimdall und Dashy; Home Portal
+noch nicht, es ist weiterhin eine Linkseite.
 
 > **So läuft es:** Home Portal ist eine selbst gehostete Web-App, kein Desktop-Tool. Sie läuft dauerhaft als Docker-Container (FastAPI hinter Nginx) auf deinem NAS oder Server, und du öffnest sie über einen beliebigen Browser in deinem Netzwerk; es gibt keinen separaten Installer über `docker compose up` hinaus.
 
-![Home Portal](docs/screenshot.de.png)
+![Home Portal](docs/screenshot.de.jpg)
 
-<p align="center"><sub>Screenshot: eine deutsche Variante von <a href="examples/portal.yaml">examples/portal.yaml</a> mit den Platzhalterbildern aus <code>examples/photos/</code>.</sub></p>
+<p align="center"><sub>Screenshot: Theme «Verspielt» mit dem Muster «Seifenblasen», Links aus <a href="examples/portal.yaml">examples/portal.yaml</a>, Platzhalterbilder aus <code>examples/photos/</code>.</sub></p>
 
 ---
 
@@ -36,7 +37,7 @@ bewusst eine Linkseite, keine Überwachungsoberfläche.
 
 ---
 
-**In der Praxis:** du bringst den Container einmal auf deinem NAS oder Heimserver zum Laufen, und jedes Gerät in deinem Netzwerk bekommt eine einzige Startseite mit Schnellzugriffen auf deine anderen selbst gehosteten Dienste (NAS, Router, Medienserver und Ähnliches) sowie ein kleines Fotoalbum. Die Links trägst du in eine YAML-Datei ein, die Fotos legst du in einen Ordner; einen Editor im Browser gibt es nicht.
+**In der Praxis:** du bringst den Container einmal auf deinem NAS oder Heimserver zum Laufen, und jedes Gerät in deinem Netzwerk bekommt eine einzige Startseite mit Schnellzugriffen auf deine anderen selbst gehosteten Dienste (NAS, Router, Medienserver und Ähnliches) sowie ein kleines Fotoalbum. Beim ersten Start legst du ein Admin-Passwort fest; danach öffnet das Zahnrad die Einstellungen, wo du Links einträgst und das Aussehen wählst. Ansehen bleibt in deinem Netz offen, ausser du verlangst auch dafür das Passwort.
 
 ---
 
@@ -47,7 +48,7 @@ bewusst eine Linkseite, keine Überwachungsoberfläche.
 | Backend | [FastAPI](https://fastapi.tiangolo.com) (Python 3.12) |
 | Reverse Proxy | [Nginx](https://nginx.org) (Alpine) |
 | Laufzeitumgebung | Docker & Docker Compose |
-| Inhalt | `portal.yaml` und ein Fotoordner, nur lesend eingebunden |
+| Inhalt | `portal.json` im Datenordner, daneben Fotos und Uploads |
 
 ## Voraussetzungen
 
@@ -76,10 +77,15 @@ Das Portal ist danach unter `http://DEIN-HOST` erreichbar.
 ```
 HomePortal/
 ├── app/
-│   ├── main.py           # FastAPI-Routen
-│   ├── portal.py         # liest portal.yaml und den Fotoordner
-│   ├── templates/        # Jinja2-Template
-│   └── static/           # Stylesheet
+│   ├── main.py           # Seite, Fotos, Login und Einrichtung
+│   ├── settings.py       # alle Routen, die das Portal ändern
+│   ├── store.py          # portal.json, übernimmt eine alte portal.yaml einmalig
+│   ├── auth.py           # Admin-Passwort (Argon2) und Sitzungen
+│   ├── uploads.py        # Hintergrund-Uploads, ohne Metadaten neu gespeichert
+│   ├── catalog.py        # Themes, Schriften, Muster und Fotos zur Auswahl
+│   ├── i18n.py           # Oberflächentexte Englisch und Deutsch
+│   ├── templates/        # Jinja2-Templates
+│   └── static/           # Stylesheet, Schriften, Hintergrundfotos
 ├── examples/             # portal.yaml und Platzhalterfotos als Vorlage
 ├── nginx/
 │   └── default.conf     # Nginx Reverse-Proxy-Konfiguration
@@ -95,42 +101,44 @@ HomePortal/
 
 | Variable | Beschreibung | Beispiel |
 |----------|-------------|---------|
-| `DATA_PATH` | Ordner mit `portal.yaml` und `photos/` | `/volume1/docker/home-portal` |
+| `DATA_PATH` | Ordner für Einstellungen, Uploads und deine `photos/` | `/volume1/docker/home-portal` |
 | `TZ` | Zeitzone | `Europe/Zurich` |
 
-## Deine Links und Fotos
+## Einrichten
 
-Alles auf der Seite kommt aus dem Ordner, auf den `DATA_PATH` zeigt:
+**Erster Start.** Portal öffnen und auf das Zahnrad klicken. Home Portal fragt
+nach einem Admin-Passwort (mindestens 10 Zeichen). Wer es zuerst festlegt,
+besitzt das Portal, also gleich nach `docker compose up` erledigen.
 
-```
-DATA_PATH/
-├── portal.yaml      Titel, Überschriften und Links
-└── photos/          .jpg, .png, .webp oder .gif, der Dateiname wird zur Bildunterschrift
-```
+**Einstellungen.** Hinter dem Zahnrad, nach dem Anmelden:
 
-Als Vorlage dient [`examples/portal.yaml`](examples/portal.yaml):
+![Einstellungen](docs/settings.de.jpg)
 
-```yaml
-title: Unser Zuhause
-subtitle: Alles aus unserem Netz, an einem Ort.
-links_heading: Dienste
-album_heading: Familienalbum
-links:
-  - name: NAS
-    url: http://192.168.1.10:5000
-    description: Dateiserver
-    icon: "🗄️"
-```
+| Bereich | Was sich ändern lässt |
+|---|---|
+| Aussehen | Theme (Mitternacht, Glas, Morgenrot, Verspielt, Papier), Hintergrund (keiner, vier gezeichnete Muster, sieben mitgelieferte Fotos oder ein eigenes Bild), Schrift (Inter, Nunito, Fredoka, Playfair Display, JetBrains Mono), Sprache (wie der Browser, Englisch, Deutsch) |
+| Texte der Seite | Titel, Untertitel, beide Überschriften |
+| Links | Hinzufügen, bearbeiten, umsortieren, löschen; Name und eine Adresse mit `http://` oder `https://` sind Pflicht, Beschreibung und Emoji-Symbol freiwillig |
+| Zugriff | Passwort auch zum Ansehen verlangen; Passwort ändern |
 
-Änderungen erscheinen beim nächsten Neuladen der Seite. Ein Link ohne Namen
-oder mit einer URL, die nicht mit `http://` oder `https://` beginnt, wird
-übersprungen und oben auf der Seite genannt. Das Album zeigt bis zu 60 Fotos,
-nach Dateiname sortiert; versteckte Dateien und alles, was kein Bild ist,
-bleiben draussen. Fehlt `portal.yaml`, sagt die Seite, wo die Datei hingehört,
-statt erfundene Links zu zeigen.
+**Album.** Die Fotos kommen aus dem Ordner `photos` in `DATA_PATH`
+(`.jpg`, `.png`, `.webp`, `.gif`, bis zu 60, nach Dateiname sortiert, der
+Dateiname wird zur Bildunterschrift). Hineinkopieren geht mit dem Dateimanager
+des NAS; einen Foto-Upload im Browser gibt es nicht.
 
-Der Container bindet den Ordner nur lesend ein. Home Portal verändert deine
-Dateien nie.
+**Hochgeladene Hintergründe** werden gelesen und als JPEG neu gespeichert,
+dabei fallen Standort- und Kameradaten weg. JPEG, PNG, WebP und iPhone-HEIC
+bis 20 MB.
+
+**Von 1.2 umsteigen?** Eine vorhandene `portal.yaml` wird beim ersten Start
+einmalig in `portal.json` übernommen. Danach wird in den Einstellungen
+bearbeitet; die YAML-Datei wird nicht mehr gelesen.
+
+Alles steckt im Container: Schriften, Muster und Fotos kommen von deinem
+Server, nicht aus dem Internet. Bildnachweise und Lizenzen (alle CC0) stehen in
+[`app/static/backgrounds/CREDITS.md`](app/static/backgrounds/CREDITS.md), die
+Schriftlizenzen (SIL OFL) in
+[`app/static/fonts/LICENSE-FONTS.txt`](app/static/fonts/LICENSE-FONTS.txt).
 
 ## Nützliche Befehle
 
@@ -154,7 +162,7 @@ docker compose down
 docker compose down
 ```
 
-Danach das geklonte Repository-Verzeichnis löschen. Der `DATA_PATH`-Ordner enthält nur deine eigene `portal.yaml` und deine Fotos, in die Home Portal nie geschrieben hat; behalten oder löschen, wie du willst. Home Portal hinterlässt keine weiteren Spuren auf dem Host.
+Danach das geklonte Repository-Verzeichnis löschen. In `DATA_PATH` hat Home Portal `portal.json` (Einstellungen und Links), `auth.json` (Passwort-Hash) und `uploads/` angelegt; dein Ordner `photos/` gehört dir und wurde nur gelesen. Lösche, was du nicht mehr brauchst. Home Portal hinterlässt keine weiteren Spuren auf dem Host.
 
 ---
 

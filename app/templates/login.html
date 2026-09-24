@@ -1,0 +1,11 @@
+{% extends "_base.html" %}
+{% block title %}{{ t('log_in') }}{% endblock %}
+{% block body %}
+<form class="panel narrow" method="post" action="/login">
+  <h1>{{ t('login_title') }}</h1>
+  {% if err %}<p class="error">{{ t(err) }}</p>{% endif %}
+  <label>{{ t('password') }}<input type="password" name="password" autocomplete="current-password" required autofocus></label>
+  <button type="submit">{{ t('log_in') }}</button>
+  <p><a href="/">{{ t('back_to_portal') }}</a></p>
+</form>
+{% endblock %}

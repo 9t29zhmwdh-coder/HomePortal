@@ -16,9 +16,26 @@
 - Fixed: the stylesheet never loaded through Nginx
 - Health endpoint `/healthz`
 
-## Ideas, not scheduled
-- [ ] Optional password protection for the page
-- [ ] Mobile layout check on small phones
+## v1.3.0, Settings and Themes (2026-09-24)
+- Settings page with admin login (Argon2, CSRF, lockout), first-start password setup
+- Five themes, four drawn patterns, seven bundled CC0 photos, own background uploads (EXIF removed, HEIC supported)
+- Five bundled fonts, English and German interface following the browser
+- Optional password for viewing
+- Fixed: login lockout behind Nginx would have hit every client at once
+
+## v1.4.0, Grid and Tabs, Planned
+- [ ] Tiles in sizes (1x1, 2x1, 2x2, ...) placed by drag and drop
+- [ ] Several dashboards as tabs
+
+## v1.5.0, Live Tiles, Planned
+- [ ] Home Assistant entity values (token stays on the server)
+- [ ] Reachability of services (NAS, router, ...), clock, optional weather
+
+## v1.6.0, Embedded Apps, Planned
+- [ ] Apps as a tile or a whole tab, with a tested list of which apps allow embedding
+
+## v2.0.0
+- [ ] README repositioned from "page of links" to dashboard, everything above verified together
 
 ## Dual-Licensing Readiness
 

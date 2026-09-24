@@ -1,0 +1,20 @@
+{%- set look = state.appearance -%}
+{%- set bg = look.background -%}
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ state.site.title }}{% endblock %}</title>
+  <link rel="stylesheet" href="/static/css/fonts.css">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <style>:root { --font: {{ catalog.FONTS[look.font].family | safe }}, system-ui, sans-serif; }</style>
+</head>
+<body class="theme-{{ look.theme }}{% if bg.kind == 'pattern' %} bg-pattern bg-{{ bg.value }}{% endif %}{% if bg.kind in ('photo', 'upload') %} bg-image{% endif %}"
+  {%- if bg.kind == 'photo' %} style="--bg-image: url('/static/backgrounds/{{ bg.value }}.jpg')"{% endif %}
+  {%- if bg.kind == 'upload' %} style="--bg-image: url('/media/{{ bg.value }}')"{% endif %}>
+  <div class="wrap">
+    {% block body %}{% endblock %}
+  </div>
+</body>
+</html>

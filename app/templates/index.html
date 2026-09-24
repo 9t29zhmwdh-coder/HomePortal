@@ -1,60 +1,39 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ portal.title }}</title>
-  <link rel="stylesheet" href="/static/css/style.css">
-</head>
-<body>
-  <div class="wrap">
-    <header>
-      <h1>{{ portal.title }}</h1>
-      {% if portal.subtitle %}<p>{{ portal.subtitle }}</p>{% endif %}
-    </header>
-
-    {% if portal.problems %}
-    <div class="notice notice-warn">
-      {% for problem in portal.problems %}<p>{{ problem }}</p>{% endfor %}
-    </div>
-    {% endif %}
-
-    {% if not portal.config_found %}
-    <div class="notice">
-      <p><strong>No links yet.</strong> Create <code>{{ data_dir }}/portal.yaml</code>
-        and reload this page. A minimal file:</p>
-      <pre>links:
-  - name: NAS
-    url: http://192.168.1.10:5000
-    description: File server</pre>
-      <p>Photos go into <code>{{ data_dir }}/photos/</code>.</p>
-    </div>
-    {% endif %}
-
-    {% if portal.links %}
-    <h2>{{ portal.links_heading }}</h2>
-    <div class="links-grid">
-      {% for link in portal.links %}
-      <a class="link-card" href="{{ link.url }}">
-        {% if link.icon %}<span class="icon">{{ link.icon }}</span>{% endif %}
-        <span class="name">{{ link.name }}</span>
-        {% if link.description %}<span class="desc">{{ link.description }}</span>{% endif %}
-      </a>
-      {% endfor %}
-    </div>
-    {% endif %}
-
-    {% if portal.photos %}
-    <h2>{{ portal.album_heading }}</h2>
-    <div class="album-grid">
-      {% for name in portal.photos %}
-      <figure>
-        <img src="/photos/{{ name | urlencode }}" alt="{{ caption_for(name) }}" loading="lazy">
-        <figcaption>{{ caption_for(name) }}</figcaption>
-      </figure>
-      {% endfor %}
-    </div>
-    {% endif %}
+{% extends "_base.html" %}
+{% block body %}
+<header class="page-head">
+  <div>
+    <h1>{{ state.site.title }}</h1>
+    {% if state.site.subtitle %}<p>{{ state.site.subtitle }}</p>{% endif %}
   </div>
-</body>
-</html>
+  <a class="gear" href="/settings" title="{{ t('settings') }}" aria-label="{{ t('settings') }}">⚙︎</a>
+</header>
+
+{% if not state.links %}
+<div class="notice">
+  <p><strong>{{ t('no_links_title') }}</strong> {{ t('no_links_body') }}</p>
+</div>
+{% else %}
+<h2>{{ state.site.links_heading or t('links') }}</h2>
+<div class="links-grid">
+  {% for link in state.links %}
+  <a class="link-card" href="{{ link.url }}">
+    {% if link.icon %}<span class="icon">{{ link.icon }}</span>{% endif %}
+    <span class="name">{{ link.name }}</span>
+    {% if link.description %}<span class="desc">{{ link.description }}</span>{% endif %}
+  </a>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if photos %}
+<h2>{{ state.site.album_heading or t('album') }}</h2>
+<div class="album-grid">
+  {% for name in photos %}
+  <figure>
+    <img src="/photos/{{ name | urlencode }}" alt="{{ caption_for(name) }}" loading="lazy">
+    <figcaption>{{ caption_for(name) }}</figcaption>
+  </figure>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

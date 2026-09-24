@@ -5,7 +5,7 @@ services:
     container_name: home-portal
     restart: unless-stopped
     volumes:
-      - ${DATA_PATH}:/data:ro
+      - ${DATA_PATH}:/data
     expose:
       - "8000"
     environment:

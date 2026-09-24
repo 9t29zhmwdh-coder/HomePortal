@@ -1,5 +1,5 @@
 # Copilot Instructions for Home Portal
-Home Portal is a lightweight, self-hosted personal web portal built with FastAPI and Docker. It runs as a container on a NAS or Linux server and gives every device on the network a landing page with quick links to other self-hosted services and a small photo album widget.
+Home Portal is a lightweight, self-hosted personal web portal built with FastAPI and Docker. It runs as a container on a NAS or Linux server and gives every device on the network a landing page with quick links to other self-hosted services and a small photo album. An admin changes links and appearance on a settings page behind a password.
 
 ## Code style
 - Functions stay small and single-purpose, prefer under 20 lines
