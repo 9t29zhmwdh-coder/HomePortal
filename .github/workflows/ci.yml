@@ -19,7 +19,9 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install dependencies
-        run: pip install -r requirements.txt pytest pytest-cov httpx
+        run: |
+          pip install --require-hashes -r requirements.lock
+          pip install pytest pytest-cov
       - name: Install ruff
         run: pip install ruff==0.16.0
       - name: Lint
@@ -28,6 +30,24 @@ jobs:
         run: ruff format --check .
       - name: Smoke test
         run: pytest tests/ -v --cov=app --cov-report=term-missing
+
+  dependencies:
+    name: Dependency audit and lock check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+      - name: Install tools
+        run: pip install pip-audit==2.10.1 uv==0.12.18
+      - name: Lock file matches requirements.txt
+        run: |
+          # A requirements.txt change without a new lock would ship untested versions.
+          uv pip compile requirements.txt --universal --python-version 3.12 --generate-hashes --no-header -q -o fresh.lock
+          diff <(grep -v -e '^#' -e '^$' requirements.lock) <(grep -v -e '^#' -e '^$' fresh.lock)
+      - name: Known vulnerabilities
+        run: pip-audit -r requirements.lock --progress-spinner off
 
   docker-smoke-test:
     name: Docker Compose Smoke Test

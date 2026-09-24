@@ -598,8 +598,9 @@ body.bg-pattern h2 {
 .album-mosaic {
   flex: 1;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
-  grid-auto-rows: 96px;
+  /* auto-fit stretches a few photos across the tile instead of leaving it half empty */
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  align-content: start;
   gap: 0.4rem;
   overflow: hidden;
   border-radius: calc(var(--radius) - 4px);
@@ -613,6 +614,7 @@ body.bg-pattern h2 {
 }
 
 .album-mosaic img {
+  aspect-ratio: 4 / 3;
   object-fit: cover;
   border-radius: 6px;
 }
@@ -845,3 +847,7 @@ textarea {
 
 .app-placeholder p { margin: 0; }
 .app-tab .app-card { height: calc(100vh - 16rem); min-height: 420px; }
+
+.welcome { max-width: 640px; }
+.welcome ol { padding-left: 1.2rem; line-height: 1.6; }
+.welcome li { margin-bottom: 0.4rem; }

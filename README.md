@@ -6,7 +6,7 @@
 
 [🇩🇪 Deutsche Version](README.de.md)
 
-**One page on your network that links to everything you self-host, so nobody has to remember which port it was on.**
+**One page for your home network: everything you self-host, one click away, and what it is doing right now.**
 
 Your NAS is on `:5000`, Home Assistant on `:8123`, the media server somewhere
 else. You know them. Nobody else in the house does, and neither will you after
@@ -85,6 +85,7 @@ HomePortal/
 │   ├── tiles.py          # tile types, fixed sizes, layout checks
 │   ├── live.py           # Home Assistant, status and weather values, cached
 │   ├── connections.py    # Home Assistant address and token (connections.json)
+│   ├── audit.py          # audit trail and error references on stdout
 │   ├── store.py          # portal.json, migrates 1.2 and 1.3 data once
 │   ├── auth.py           # admin password (Argon2) and sessions
 │   ├── uploads.py        # background uploads, re-encoded without metadata
@@ -97,7 +98,8 @@ HomePortal/
 │   └── default.conf      # Nginx reverse proxy config
 ├── Dockerfile
 ├── docker-compose.yml
-├── requirements.txt
+├── requirements.txt      # direct dependencies
+├── requirements.lock     # every package pinned with its hash, used by the image
 └── .env.example
 ```
 
@@ -194,6 +196,28 @@ licences (SIL OFL) in
 [`app/static/fonts/LICENSE-FONTS.txt`](app/static/fonts/LICENSE-FONTS.txt).
 The edit mode uses [gridstack.js](https://gridstackjs.com) (MIT), bundled in
 `app/static/vendor/gridstack`; the page itself needs no JavaScript.
+
+## Security
+
+Viewing is open on your network unless you require the password; every change
+needs the admin login. The full analysis is in
+[`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md). In short: Argon2 password hash,
+signed SameSite=Strict session, CSRF tokens, lockout after five failed logins,
+server-side checks for every layout and address, uploads re-encoded without
+metadata, the Home Assistant token kept apart and never sent to the browser,
+and an audit line for every change in `docker compose logs app`.
+
+> **Note:** Home Portal serves plain HTTP. On a home network that is the usual
+> setup, but the password and session cookie cross the network unencrypted.
+> For anything beyond that, put a TLS proxy in front (for example the reverse
+> proxy of your NAS) and let it forward `X-Forwarded-Proto`; the session cookie
+> then gets the `Secure` flag on its own.
+
+> **Note:** Logging out removes the cookie from your browser but does not
+> revoke a copy of it. Changing the password ends every session at once.
+
+Each release on GitHub carries a CycloneDX SBOM of the exact packages the
+container installs (`requirements.lock`, pinned with hashes).
 
 ## Useful Commands
 

@@ -17,9 +17,15 @@
 {% if board.app_url %}
 <div class="app-tab">{{ app_frame(board.name or t('home_tab'), board.app_url, '', live.get('tab-app', {}), t) }}</div>
 {% elif not board.tiles %}
-<div class="notice">
-  <p><strong>{{ t('empty_tab_title') }}</strong>
-  {% if logged_in %}{{ t('empty_tab_admin') }}{% else %}{{ t('empty_tab_body') }}{% endif %}</p>
+<div class="panel welcome">
+  <h2>{{ t('welcome_title') }}</h2>
+  <ol>
+    <li>{{ t('welcome_step_login') }}</li>
+    <li>{{ t('welcome_step_look') }}</li>
+    <li>{{ t('welcome_step_tiles') }}</li>
+  </ol>
+  <p class="dim">{{ t('welcome_tip') }}</p>
+  <a class="button" href="{{ '/edit/' ~ board.id if logged_in else '/settings' }}">{{ t('welcome_start_edit') if logged_in else t('welcome_start') }}</a>
 </div>
 {% else %}
 <div class="board">

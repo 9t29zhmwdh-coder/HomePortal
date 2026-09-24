@@ -9,7 +9,7 @@ def test_fresh_install_shows_hint_and_no_fake_links(client):
     response = client.get("/")
     assert response.status_code == 200
     assert 'href="#"' not in response.text
-    assert "This tab is empty." in response.text
+    assert "Welcome to your Home Portal" in response.text
 
 
 def test_legacy_yaml_becomes_tiles_once(client, example_data):
@@ -97,3 +97,19 @@ def test_setup_cannot_run_twice(admin):
 def test_logout_ends_the_session(admin):
     admin.post("/logout")
     assert admin.get("/settings").headers["location"] == "/login"
+
+
+def test_session_cookie_is_secure_behind_https(data_dir):
+    from fastapi.testclient import TestClient
+
+    from app.main import app
+
+    secure = TestClient(app, base_url="https://portal.test", follow_redirects=False)
+    response = secure.post("/setup", data={"password": PASSWORD, "confirm": PASSWORD})
+    cookie = response.headers["set-cookie"].lower()
+    assert "secure" in cookie and "httponly" in cookie and "samesite=strict" in cookie
+
+
+def test_session_cookie_is_not_secure_over_plain_http(client):
+    response = client.post("/setup", data={"password": PASSWORD, "confirm": PASSWORD})
+    assert "secure" not in response.headers["set-cookie"].lower()

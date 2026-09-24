@@ -3,6 +3,34 @@
 All notable changes to HomePortal will be documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.0.0] - 2026-09-24
+
+Home Portal is now a home dashboard: tabs of tiles you arrange yourself, live values from Home Assistant and your services, embedded apps, and themes, all set up in the browser. Versions 1.2 to 1.6 built it up step by step; 2.0.0 completes it and brings the release up to the portfolio's security standard.
+
+### Added
+
+- STRIDE threat model with trust boundaries and residual risks in `docs/THREAT_MODEL.md`.
+- Audit trail: every POST to setup, login, logout, settings and edit mode writes one JSON line to stdout with actor, action, client address, time and outcome. Form contents are never logged.
+- Error references: an unexpected error shows the visitor only a short reference, the log holds the details under it.
+- `requirements.lock` pins every package with its hash; the image installs it with `--require-hashes`.
+- CI job that regenerates the lock from `requirements.txt` and fails on a difference, and runs `pip-audit`.
+- Every release carries a CycloneDX SBOM of the pinned packages.
+- README section on security, with the known limitations called out.
+
+### Changed
+
+- README and tagline describe a dashboard, not a page of links.
+- The session cookie gets the `Secure` flag when the request arrives over HTTPS; Nginx forwards `X-Forwarded-Proto` from a TLS proxy in front.
+- New installations start with the Glass theme and the bundled alpine lake photo instead of a plain dark page; an existing saved appearance is kept.
+- An empty tab shows a short welcome in three steps (password, appearance, tiles) with a button to start, instead of one line saying it is empty.
+- The photo album fills its tile: a few photos stretch across it instead of leaving most of the tile empty.
+
+### Upgrading
+
+- Nothing to do for 1.x installations: settings migrate on first start as before. The version jumps to 2.0.0 because the product changed from a link page to a dashboard, not because of an incompatible step.
+
+---
+
 ## [1.6.0] - 2026-09-24
 
 ### Added

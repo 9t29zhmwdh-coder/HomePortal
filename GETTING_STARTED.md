@@ -215,7 +215,7 @@ To check what's happening behind the scenes:
 docker compose logs -f app
 ```
 
-Press `Ctrl+C` to stop following the logs (this does not stop the app).
+Press `Ctrl+C` to stop following the logs (this does not stop the app). Lines with `"kind": "audit"` record every login and every change: who, from which address, when, and whether it worked.
 
 To stop Home Portal later:
 

@@ -91,7 +91,7 @@ def test_unknown_values_fall_back(admin, data_dir):
     admin.post("/settings/appearance", data=form)
     look = state(data_dir)["appearance"]
     assert (
-        look["theme"] == "midnight"
+        look["theme"] == "glass"
         and look["font"] == "inter"
         and look["language"] == "auto"
     )

@@ -26,8 +26,10 @@ DEFAULTS = {
     "version": SCHEMA_VERSION,
     "site": {"title": "Home Portal", "subtitle": ""},
     "appearance": {
-        "theme": "midnight",
-        "background": {"kind": "none", "value": ""},
+        # A new install should look like a dashboard from the first second; saved
+        # appearances of existing installs are kept as they are.
+        "theme": "glass",
+        "background": {"kind": "photo", "value": "alpine-lake"},
         "font": "inter",
         "language": "auto",
     },
