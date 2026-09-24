@@ -2,60 +2,59 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Home Portal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ portal.title }}</title>
   <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
   <div class="wrap">
     <header>
-      <h1>Home Portal</h1>
-      <p>Your self-hosted starting point.</p>
+      <h1>{{ portal.title }}</h1>
+      {% if portal.subtitle %}<p>{{ portal.subtitle }}</p>{% endif %}
     </header>
 
-    <h2>Quick Links</h2>
-    <div class="links-grid">
-      <a class="link-card" href="#">
-        <span class="icon">🗄️</span>
-        <span class="name">NAS</span>
-        <span class="desc">File server</span>
-      </a>
-      <a class="link-card" href="#">
-        <span class="icon">📡</span>
-        <span class="name">Router</span>
-        <span class="desc">Network admin</span>
-      </a>
-      <a class="link-card" href="#">
-        <span class="icon">🎬</span>
-        <span class="name">Media Server</span>
-        <span class="desc">Movies &amp; shows</span>
-      </a>
-      <a class="link-card" href="#">
-        <span class="icon">📷</span>
-        <span class="name">Photo Album</span>
-        <span class="desc">Family photos</span>
-      </a>
+    {% if portal.problems %}
+    <div class="notice notice-warn">
+      {% for problem in portal.problems %}<p>{{ problem }}</p>{% endfor %}
     </div>
+    {% endif %}
 
-    <h2>Family Album</h2>
-    <p class="album-note">Demo content, replace with your own photos once configured.</p>
-    <div class="album-grid">
-      <figure>
-        <img src="/static/img/demo-photo-1.jpg" alt="Demo photo 1: Beach Day">
-        <figcaption>Beach Day</figcaption>
-      </figure>
-      <figure>
-        <img src="/static/img/demo-photo-2.jpg" alt="Demo photo 2: Mountain Hike">
-        <figcaption>Mountain Hike</figcaption>
-      </figure>
-      <figure>
-        <img src="/static/img/demo-photo-3.jpg" alt="Demo photo 3: Garden BBQ">
-        <figcaption>Garden BBQ</figcaption>
-      </figure>
-      <figure>
-        <img src="/static/img/demo-photo-4.jpg" alt="Demo photo 4: Birthday">
-        <figcaption>Birthday</figcaption>
-      </figure>
+    {% if not portal.config_found %}
+    <div class="notice">
+      <p><strong>No links yet.</strong> Create <code>{{ data_dir }}/portal.yaml</code>
+        and reload this page. A minimal file:</p>
+      <pre>links:
+  - name: NAS
+    url: http://192.168.1.10:5000
+    description: File server</pre>
+      <p>Photos go into <code>{{ data_dir }}/photos/</code>.</p>
     </div>
+    {% endif %}
+
+    {% if portal.links %}
+    <h2>{{ portal.links_heading }}</h2>
+    <div class="links-grid">
+      {% for link in portal.links %}
+      <a class="link-card" href="{{ link.url }}">
+        {% if link.icon %}<span class="icon">{{ link.icon }}</span>{% endif %}
+        <span class="name">{{ link.name }}</span>
+        {% if link.description %}<span class="desc">{{ link.description }}</span>{% endif %}
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if portal.photos %}
+    <h2>{{ portal.album_heading }}</h2>
+    <div class="album-grid">
+      {% for name in portal.photos %}
+      <figure>
+        <img src="/photos/{{ name | urlencode }}" alt="{{ caption_for(name) }}" loading="lazy">
+        <figcaption>{{ caption_for(name) }}</figcaption>
+      </figure>
+      {% endfor %}
+    </div>
+    {% endif %}
   </div>
 </body>
 </html>

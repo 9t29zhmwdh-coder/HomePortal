@@ -3,6 +3,34 @@
 All notable changes to HomePortal will be documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.2.0] - 2026-09-24
+
+### Added
+
+- The page shows your own content. Title, headings and links come from `portal.yaml` in the `DATA_PATH` folder, the album shows the images in its `photos/` subfolder. Both are read on every request, so an edit shows up on the next reload. Before this, the four links pointed at `#` and the album showed four built-in demo pictures, with no way to change either.
+- A first-start notice that says where to put `portal.yaml`, instead of placeholder links that looked real.
+- `/healthz` for container health checks.
+- `examples/portal.yaml` and the placeholder images in `examples/photos/` as a starting point.
+
+### Security
+
+- Only `http://` and `https://` link URLs are rendered; a `javascript:` or `data:` URL in `portal.yaml` is skipped and reported.
+- `/photos/{name}` serves a file only when that exact name is in the album list, so `../`, hidden files and non-images return 404.
+- The data folder is mounted read-only.
+
+### Fixed
+
+- The stylesheet never loaded behind Nginx. Nginx answered `/static/` from a folder that only exists inside the app container, so every deployment through `docker compose` showed an unstyled page. The CI smoke test only checked that `/` answered and missed it; it now also fetches the stylesheet, a link and a photo through Nginx.
+- Link names and descriptions ran into each other on one line.
+- The install instructions said `cd home-portal`; the cloned folder is `HomePortal`.
+
+### Removed
+
+- `APP_SECRET_KEY`, SQLite and "sessions" from the documentation and `.env.example`. None of them was ever used.
+- `python-multipart` and `aiofiles`, which nothing imported.
+
+---
+
 ## [1.1.9] - 2026-08-04
 
 ### Fixed

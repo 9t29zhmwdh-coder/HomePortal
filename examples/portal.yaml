@@ -1,0 +1,23 @@
+# Copy to $DATA_PATH/portal.yaml and edit. The page re-reads it on every reload.
+title: Home Portal
+subtitle: Everything on our network, in one place.
+links_heading: Links
+album_heading: Album
+
+links:
+  - name: NAS
+    url: http://192.168.1.10:5000
+    description: File server
+    icon: "🗄️"
+  - name: Router
+    url: http://192.168.1.1
+    description: Network admin
+    icon: "📡"
+  - name: Home Assistant
+    url: http://192.168.1.20:8123
+    description: Lights and heating
+    icon: "🏠"
+  - name: Media Server
+    url: http://192.168.1.10:8096
+    description: Movies and shows
+    icon: "🎬"

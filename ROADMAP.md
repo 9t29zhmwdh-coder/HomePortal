@@ -9,20 +9,16 @@
 - Landing page with quick links and a photo album widget (`app/templates/`, `app/static/`)
 - Fixed a startup crash: v0.1.0 referenced a UI that was never actually committed
 
-## v0.3.0, Planned
-- [ ] Bookmark management UI
-- [ ] Widget system (clock, weather, RSS)
-- [ ] User authentication (optional, single-user)
+## v1.2.0, Your Own Content (2026-09-24)
+- Links, title and headings come from `portal.yaml` in the data folder; the album shows the images in `photos/`
+- Edits show up on the next reload, no restart
+- Unsafe link URLs are refused, photos are served only by exact name
+- Fixed: the stylesheet never loaded through Nginx
+- Health endpoint `/healthz`
 
-## v0.4.0, Planned
-- [ ] Theme editor
-- [ ] Mobile-responsive layout
-- [ ] Plugin API
-
-## v1.0.0, Stable
-- [ ] Full documentation
-- [ ] One-command install script
-- [ ] Health endpoint for monitoring
+## Ideas, not scheduled
+- [ ] Optional password protection for the page
+- [ ] Mobile layout check on small phones
 
 ## Dual-Licensing Readiness
 
