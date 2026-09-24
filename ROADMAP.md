@@ -35,8 +35,9 @@
 - Clock with time zone, weather from Open-Meteo (the only internet request, opt-in per tile)
 - Refresh every 30 seconds without reloading
 
-## v1.6.0, Embedded Apps, Planned
-- [ ] Apps as a tile or a whole tab, with a tested list of which apps allow embedding
+## v1.6.0, Embedded Apps (2026-09-24)
+- Apps as a tile (2x2 to 6x4) or across a whole tab
+- Instead of a list from memory, the portal checks each app's framing headers and explains a refusal with a button to open it; Home Assistant's setting verified in its source code
 
 ## v2.0.0
 - [ ] README repositioned from "page of links" to dashboard, everything above verified together

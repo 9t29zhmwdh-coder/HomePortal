@@ -195,6 +195,7 @@ async def weather_config(place: str, request: Request) -> dict | None:
 
 CONFIG_BUILDERS = {
     "link": link_config,
+    "app": status_config,
     "note": lambda text: {"title": text("title"), "text": text("text", MAX_NOTE)},
     "album": lambda text: {"title": text("title")},
     "ha": ha_config,

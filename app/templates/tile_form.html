@@ -35,6 +35,11 @@
   <label>{{ t('title') }}<input name="title" value="{{ c.title }}" maxlength="200" autofocus></label>
   <label>{{ t('timezone') }}<input name="timezone" value="{{ c.timezone }}" placeholder="Europe/Zurich" maxlength="64"></label>
   <p class="dim">{{ t('timezone_hint') }}</p>
+  {% elif tile.type == 'app' %}
+  <label>{{ t('name') }}<input name="name" value="{{ c.name }}" required maxlength="200" autofocus></label>
+  <label>{{ t('url') }}<input name="url" type="url" value="{{ c.url }}" placeholder="http://192.168.1.10:8096" required maxlength="200"></label>
+  <label>{{ t('icon') }}<input name="icon" value="{{ c.icon }}" placeholder="🎬" maxlength="8" class="icon-input short"></label>
+  <p class="dim">{{ t('embed_hint') }}</p>
   {% elif tile.type == 'weather' %}
   <label>{{ t('place') }}<input name="place" value="{{ c.place }}" placeholder="Aarau" required maxlength="100" autofocus></label>
   <p class="dim">{{ t('weather_hint') }}</p>

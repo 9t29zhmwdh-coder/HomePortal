@@ -116,14 +116,15 @@
 
 <section class="panel" id="dashboards">
   <h2>{{ t('tabs') }}</h2>
-  <p class="dim">{{ t('tabs_intro') }}</p>
+  <p class="dim">{{ t('tabs_intro') }} {{ t('app_tab_intro') }}</p>
   {% for tab in state.dashboards %}
   <form method="post" action="/settings/dashboards/{{ tab.id }}" class="tab-row">
     <input type="hidden" name="csrf" value="{{ csrf }}">
     <input name="name" value="{{ tab.name }}" placeholder="{{ t('home_tab') }}" aria-label="{{ t('name') }}" maxlength="40">
+    <input name="app_url" type="url" value="{{ tab.app_url or '' }}" placeholder="{{ t('app_url_placeholder') }}" aria-label="{{ t('app_url') }}" maxlength="300">
     <span class="row-actions">
       <button name="action" value="rename">{{ t('save') }}</button>
-      <a class="button ghost" href="/edit/{{ tab.id }}">{{ t('edit_tiles') }} ({{ tab.tiles | length }})</a>
+      {% if not tab.app_url %}<a class="button ghost" href="/edit/{{ tab.id }}">{{ t('edit_tiles') }} ({{ tab.tiles | length }})</a>{% endif %}
       <button name="action" value="up" class="ghost" {% if loop.first %}disabled{% endif %}>↑<span class="sr">{{ t('move_up') }}</span></button>
       <button name="action" value="down" class="ghost" {% if loop.last %}disabled{% endif %}>↓<span class="sr">{{ t('move_down') }}</span></button>
       <button name="action" value="delete" class="ghost danger" {% if state.dashboards | length == 1 %}disabled{% endif %}>{{ t('delete') }}</button>
@@ -142,6 +143,7 @@
   <form method="post" action="/settings/dashboards" class="tab-row">
     <input type="hidden" name="csrf" value="{{ csrf }}">
     <input name="name" placeholder="{{ t('new_tab_placeholder') }}" required maxlength="40">
+    <input name="app_url" type="url" placeholder="{{ t('app_url_placeholder') }}" aria-label="{{ t('app_url') }}" maxlength="300">
     <span class="row-actions"><button type="submit">+ {{ t('add_tab') }}</button></span>
   </form>
   <p class="dim">{{ t('photos_hint') }}</p>

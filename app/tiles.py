@@ -21,6 +21,8 @@ SIZES = {
     "block": (4, 2),
     "full-2": (6, 2),
     "full-3": (6, 3),
+    "block-3": (4, 3),
+    "full-4": (6, 4),
 }
 
 TYPES = {
@@ -34,9 +36,15 @@ TYPES = {
     "status": {"sizes": ("small", "wide"), "default": "small"},
     "clock": {"sizes": ("small", "wide", "large"), "default": "wide"},
     "weather": {"sizes": ("small", "wide", "large"), "default": "wide"},
+    "app": {
+        "sizes": ("large", "block", "block-3", "full-2", "full-3", "full-4"),
+        "default": "block-3",
+    },
 }
 
 LIVE_TYPES = ("ha", "status", "weather", "clock")
+# Checked when the page renders, but never refreshed by live.js: that would reload the app.
+EMBED_TYPES = ("app",)
 
 
 def new_id() -> str:

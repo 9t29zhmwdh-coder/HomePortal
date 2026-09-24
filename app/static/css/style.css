@@ -710,7 +710,7 @@ textarea {
 
 .tab-row {
   display: grid;
-  grid-template-columns: minmax(10rem, 1fr) auto;
+  grid-template-columns: minmax(8rem, 1fr) minmax(10rem, 1.4fr) auto;
   gap: 0.5rem;
   align-items: center;
   margin-bottom: 0.5rem;
@@ -799,3 +799,49 @@ textarea {
 .tile[style*="--h: 2"] .weather-temp { font-size: 3rem; }
 
 .theme-playful .live-card { border-width: 2px; }
+
+/* Embedded apps */
+.app-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(var(--blur));
+  -webkit-backdrop-filter: blur(var(--blur));
+  overflow: hidden;
+}
+
+.app-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+  font-weight: 650;
+  border-bottom: 1px solid var(--border);
+}
+
+.app-open { text-decoration: none; color: var(--text); font-size: 1rem; }
+
+.app-card iframe {
+  flex: 1;
+  width: 100%;
+  border: 0;
+  background: #fff;
+}
+
+.app-placeholder {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 1rem;
+  overflow: hidden;
+}
+
+.app-placeholder p { margin: 0; }
+.app-tab .app-card { height: calc(100vh - 16rem); min-height: 420px; }

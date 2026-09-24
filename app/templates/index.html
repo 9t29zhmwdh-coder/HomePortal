@@ -1,5 +1,5 @@
 {% extends "_base.html" %}
-{% from "_tiles.html" import tile_body, placement %}
+{% from "_tiles.html" import tile_body, placement, app_frame %}
 {% block body %}
 <header class="page-head">
   <div>
@@ -7,14 +7,16 @@
     {% if state.site.subtitle %}<p>{{ state.site.subtitle }}</p>{% endif %}
   </div>
   <nav class="head-actions">
-    {% if logged_in %}<a class="gear" href="/edit/{{ board.id }}" title="{{ t('edit_tab') }}" aria-label="{{ t('edit_tab') }}">✎</a>{% endif %}
+    {% if logged_in and not board.app_url %}<a class="gear" href="/edit/{{ board.id }}" title="{{ t('edit_tab') }}" aria-label="{{ t('edit_tab') }}">✎</a>{% endif %}
     <a class="gear" href="/settings" title="{{ t('settings') }}" aria-label="{{ t('settings') }}">⚙︎</a>
   </nav>
 </header>
 
 {% include "_tabs.html" %}
 
-{% if not board.tiles %}
+{% if board.app_url %}
+<div class="app-tab">{{ app_frame(board.name or t('home_tab'), board.app_url, '', live.get('tab-app', {}), t) }}</div>
+{% elif not board.tiles %}
 <div class="notice">
   <p><strong>{{ t('empty_tab_title') }}</strong>
   {% if logged_in %}{{ t('empty_tab_admin') }}{% else %}{{ t('empty_tab_body') }}{% endif %}</p>

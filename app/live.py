@@ -14,13 +14,14 @@ import httpx
 from app import connections
 
 TIMEOUT_SECONDS = 3.0
-CACHE_SECONDS = {"ha": 10, "status": 20, "weather": 900}
+CACHE_SECONDS = {"ha": 10, "status": 20, "weather": 900, "embed": 600}
 ENTITY_ID = re.compile(r"^[a-z_]+\.[a-z0-9_]+$")
 MAX_ENTITIES = 8
 WEATHER_URL = "https://api.open-meteo.com/v1/forecast"
 GEOCODE_URL = "https://geocoding-api.open-meteo.com/v1/search"
 
 _cache: dict[tuple, tuple[float, dict]] = {}
+FETCHED_TYPES = ("ha", "status", "weather", "app")
 
 
 def make_client(**options) -> httpx.AsyncClient:
@@ -41,15 +42,15 @@ async def cached(key: tuple, seconds: int, fetch) -> dict:
     return value
 
 
-async def board_data(board: dict, data_dir: Path) -> dict:
-    live = [
-        tile for tile in board["tiles"] if tile["type"] in ("ha", "status", "weather")
-    ]
-    results = await asyncio.gather(*(tile_data(tile, data_dir) for tile in live))
+async def board_data(board: dict, data_dir: Path, origin: str = "") -> dict:
+    live = [tile for tile in board["tiles"] if tile["type"] in FETCHED_TYPES]
+    results = await asyncio.gather(
+        *(tile_data(tile, data_dir, origin) for tile in live)
+    )
     return {tile["id"]: result for tile, result in zip(live, results)}
 
 
-async def tile_data(tile: dict, data_dir: Path) -> dict:
+async def tile_data(tile: dict, data_dir: Path, origin: str = "") -> dict:
     config = tile["config"]
     if tile["type"] == "ha":
         return await ha_entities(data_dir, config.get("entities", []))
@@ -66,7 +67,57 @@ async def tile_data(tile: dict, data_dir: Path) -> dict:
             CACHE_SECONDS["weather"],
             lambda: weather(config["latitude"], config["longitude"]),
         )
+    if tile["type"] == "app":
+        return await embed_status(config["url"], origin)
     return {}
+
+
+async def embed_status(url: str, origin: str = "") -> dict:
+    return await cached(
+        ("embed", url, origin), CACHE_SECONDS["embed"], lambda: embed_check(url, origin)
+    )
+
+
+async def embed_check(url: str, origin: str = "") -> dict:
+    """Asks the app whether a page from another origin may show it in a frame.
+
+    The browser enforces X-Frame-Options and CSP frame-ancestors; reading the same
+    headers here lets the tile explain a refusal instead of showing an empty box.
+    """
+    try:
+        async with make_client(verify=False) as client:
+            async with client.stream("GET", url) as response:
+                headers = response.headers
+    except httpx.HTTPError:
+        return {"embeddable": False, "reason": "embed_unreachable"}
+    reason = frame_refusal(
+        headers.get("x-frame-options", ""),
+        headers.get("content-security-policy", ""),
+        origin,
+    )
+    return {"embeddable": reason is None, "reason": reason}
+
+
+def frame_refusal(x_frame_options: str, csp: str, origin: str = "") -> str | None:
+    # Home Portal always runs on another origin than the app, so SAMEORIGIN refuses it too.
+    if x_frame_options.strip().upper() in ("DENY", "SAMEORIGIN"):
+        return "embed_refused_xfo"
+    ancestors = frame_ancestors(csp)
+    if (
+        ancestors is not None
+        and "*" not in ancestors
+        and origin.rstrip("/") not in ancestors
+    ):
+        return "embed_refused_csp"
+    return None
+
+
+def frame_ancestors(csp: str) -> list[str] | None:
+    for directive in csp.split(";"):
+        parts = directive.split()
+        if parts and parts[0].lower() == "frame-ancestors":
+            return parts[1:]
+    return None
 
 
 def parse_entities(text: str) -> list[str] | None:
