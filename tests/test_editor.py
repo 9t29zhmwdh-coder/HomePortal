@@ -42,7 +42,7 @@ def test_tiles_are_added_at_the_first_free_spot(admin, data_dir, board_id):
 )
 def test_link_tiles_need_a_safe_url(admin, data_dir, board_id, url):
     response = add(admin, board_id, type="link", name="Bad", url=url)
-    assert "invalid_tile" in response.headers["location"]
+    assert "invalid_link" in response.headers["location"]
     assert board(data_dir)["tiles"] == []
 
 

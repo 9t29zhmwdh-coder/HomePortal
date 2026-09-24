@@ -203,6 +203,8 @@ After `docker compose up -d --build` finishes, two containers run in the backgro
 
 More tabs (for example "Media" or "Technology") are added in the settings under **Tabs**.
 
+To show values from Home Assistant, open the settings, **Connections**, enter the Home Assistant address and a long-lived access token (Home Assistant: your profile, **Security**, **Long-lived access tokens**, **Create token**), and click **Save and test**. Then add a **Home Assistant** tile and enter the entity ids, one per line, as listed in Home Assistant under **Settings**, **Devices & services**, **Entities**.
+
 For the album, copy photos into the `photos` folder inside your `DATA_PATH` folder (create it if it is not there), then reload the page.
 
 Anyone on your network can open the page without a password. To change that, tick **Ask for the password to view the portal, too** under **Access**.
@@ -242,4 +244,6 @@ docker compose up -d --build
 | Forgot the admin password | Only its hash is stored | Stop the container, delete `auth.json` in `DATA_PATH`, start again and set a new password; links and settings stay |
 | Photos do not show | Wrong folder or format | They must be in `DATA_PATH/photos/` as `.jpg`, `.png`, `.webp` or `.gif` |
 | "Layout not saved (layout_overlap)" | Two tiles would sit on the same cells | Move one of them, then save again |
+| Home Assistant tile says the token was refused | Token revoked or mistyped | Create a new long-lived token in Home Assistant and save it under **Connections** |
+| Home Assistant tile says Home Assistant does not answer | Wrong address, or the portal server cannot reach it | Open the address from the NAS or server that runs Home Portal; use the IP address rather than a `.local` name |
 | Leaving the edit mode asks whether to leave the page | The layout has unsaved changes | Click **Save layout** first |

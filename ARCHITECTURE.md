@@ -9,10 +9,12 @@ front, Docker Compose runs the two containers.
 
 ```
 app/
-├── main.py       /, /d/{tab}, /photos, /media, /setup, /login, /logout, /healthz
+├── main.py       /, /d/{tab}, /live/{tab}/{tile}, /photos, /media, /setup, /login, /logout, /healthz
 ├── settings.py   /settings: appearance, texts, tabs, uploads, access, password
 ├── editor.py     /edit/{tab}: layout (JSON), add, change and delete tiles
 ├── tiles.py      tile types, fixed sizes, free-spot search, layout validation
+├── live.py       Home Assistant, status and weather values: timeouts, cache, parallel fetch
+├── connections.py  connections.json: Home Assistant address and token
 ├── web.py        shared helpers: rendering, session lookup, CSRF check
 ├── store.py      portal.json: load, atomic save, schema migration
 ├── auth.py       auth.json: Argon2 password hash, session key, login lockout
@@ -30,6 +32,7 @@ app/
 |---|---|---|
 | `portal.json` | settings, edit mode | schema 2: site texts, appearance, access switch, tabs with their tiles |
 | `auth.json` (0600) | setup, password change | Argon2 hash, session signing key |
+| `connections.json` (0600) | settings, Connections | Home Assistant address and long-lived token |
 | `uploads/` | background upload | re-encoded JPEGs and thumbnails, random names |
 | `photos/` | you | album pictures, only read |
 | `portal.yaml` | you (1.2) | imported once if `portal.json` does not exist yet |
@@ -46,6 +49,23 @@ flow. gridstack.js is loaded only on the edit page.
 Schema 1 (1.3, a flat link list) and `portal.yaml` (1.2) are migrated once into
 one tab: links as 1x1 tiles in reading order, the album as a 6x2 tile below.
 
+## Live tiles
+
+A tab's live tiles are fetched in parallel before the page renders, each with a
+3-second timeout, so one slow service delays the page by at most that. Results
+are cached (Home Assistant 10 s, status 20 s, weather 15 min). `live.js`
+re-requests `/live/{tab}/{tile}` every 30 seconds while the page is visible and
+swaps in the server-rendered tile; clocks tick in the browser.
+
+- **Home Assistant**: `GET /api/states/<entity>` with the stored token. Entity
+  ids must match `domain.object_id` before they are saved, so they cannot bend
+  the request path.
+- **Status**: a streamed `GET` that stops after the headers; any answer below
+  500 counts as up. Certificates are not verified here, since home services
+  often use self-signed ones and nothing is read.
+- **Weather**: Open-Meteo forecast API with the coordinates found by its
+  geocoding API when the tile is saved.
+
 ## Security model
 
 - **Viewing** is open on the network by default; the admin can require the
@@ -59,6 +79,9 @@ one tab: links as 1x1 tiles in reading order, the album as a 6x2 tile below.
   rotates the signing key and ends every session.
 - **Login lockout**: five failures per client address within five minutes.
   Nginx overwrites `X-Forwarded-For`, so the address cannot be forged from outside.
+- **Home Assistant token**: stored apart from `portal.json`, never rendered; a
+  changed address requires entering the token again, so a hijacked session
+  cannot redirect it to another server.
 - **Links**: only `http(s)://host` URLs are accepted; Jinja autoescapes all text.
 - **Files**: `/photos/{name}` and `/media/{name}` return a file only when the
   name is in the directory listing, so the request never builds a path.

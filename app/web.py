@@ -1,12 +1,14 @@
 """Request helpers shared by the page and the settings routes."""
 
+from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from fastapi import HTTPException, Request
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 
-from app import auth, catalog, i18n, store, tiles
+from app import auth, catalog, i18n, live, store, tiles
 from app import portal as portal_data
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -14,6 +16,26 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 templates.env.globals["caption_for"] = portal_data.caption_for
 templates.env.globals["catalog"] = catalog
 templates.env.globals["catalog_tiles"] = tiles
+templates.env.globals["weather_symbol"] = live.weather_symbol
+
+
+def clock_now(zone: str) -> dict:
+    """Server-side first paint of a clock tile; live.js keeps it ticking afterwards."""
+    now = datetime.now(ZoneInfo(zone)) if zone else datetime.now().astimezone()
+    return {"time": now.strftime("%H:%M"), "date": now.strftime("%d.%m.%Y")}
+
+
+def state_label(state, t) -> str:
+    """Home Assistant states like on, off, open are shown in the page language."""
+    if state is None:
+        return t("state_missing")
+    key = f"state_{state}"
+    label = t(key)
+    return state if label == key else label
+
+
+templates.env.globals["clock_now"] = clock_now
+templates.env.globals["state_label"] = state_label
 
 
 class LoginRequired(Exception):

@@ -30,7 +30,13 @@ TYPES = {
         "default": "wide",
     },
     "album": {"sizes": ("large", "block", "full-2", "full-3"), "default": "full-2"},
+    "ha": {"sizes": ("small", "wide", "tall", "large", "banner"), "default": "wide"},
+    "status": {"sizes": ("small", "wide"), "default": "small"},
+    "clock": {"sizes": ("small", "wide", "large"), "default": "wide"},
+    "weather": {"sizes": ("small", "wide", "large"), "default": "wide"},
 }
+
+LIVE_TYPES = ("ha", "status", "weather", "clock")
 
 
 def new_id() -> str:
@@ -42,7 +48,7 @@ def is_allowed_size(tile_type: str, w: int, h: int) -> bool:
 
 
 def new_tile(tile_type: str, config: dict, tiles: list) -> dict:
-    w, h = SIZES[TYPES[tile_type]["default"]]
+    w, h = SIZES[default_size(tile_type, config)]
     x, y = free_spot(tiles, w, h)
     return {
         "id": new_id(),
@@ -53,6 +59,13 @@ def new_tile(tile_type: str, config: dict, tiles: list) -> dict:
         "h": h,
         "config": config,
     }
+
+
+def default_size(tile_type: str, config: dict) -> str:
+    # More than three Home Assistant values do not fit a one-row tile.
+    if tile_type == "ha" and len(config.get("entities", [])) > 3:
+        return "large"
+    return TYPES[tile_type]["default"]
 
 
 def free_spot(tiles: list, w: int, h: int) -> tuple[int, int]:
