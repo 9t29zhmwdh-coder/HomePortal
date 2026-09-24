@@ -3,6 +3,29 @@
 All notable changes to HomePortal will be documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.5.0] - 2026-09-24
+
+### Added
+
+- Home Assistant tile: one to eight entities with their current state and unit. States such as on, off, open, locked are shown in the page language; an entity that does not exist says so. Tiles with more than three entities start as 2x2.
+- Connections in the settings: Home Assistant address and long-lived token, saved together with a connection test that tells a wrong token from an unreachable server.
+- Status tile: green or red and the response time for any `http(s)` address. The request stops after the headers and reads nothing.
+- Clock tile with an optional time zone, ticking in the browser.
+- Weather tile from Open-Meteo, free and without an account: the place is looked up once when saving, then the forecast is fetched every 15 minutes.
+- Live tiles refresh every 30 seconds while the page is visible, without a reload.
+
+### Security
+
+- The Home Assistant token lives in `connections.json` (mode 0600), not in `portal.json`, and is never rendered into a page. Changing the address requires entering the token again, so a stolen session cannot point the stored token at another server.
+- Entity ids are checked against the `domain.object_id` pattern before saving; they end up in the request path to Home Assistant.
+- Every outbound request has a 3-second timeout and a cache, and a tab fetches all its live tiles in parallel.
+
+### Fixed
+
+- `httpx` was only installed for the tests; it is now a runtime dependency, without which the container would not have started with live tiles.
+
+---
+
 ## [1.4.0] - 2026-09-24
 
 ### Added

@@ -731,3 +731,71 @@ textarea {
   .tile { grid-column: auto / span var(--mw); grid-row: auto / span var(--h); }
   .tab-row { grid-template-columns: 1fr; }
 }
+
+/* Live tiles */
+.live-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(var(--blur));
+  -webkit-backdrop-filter: blur(var(--blur));
+  padding: 0.8rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.live-card h3 { margin: 0 0 0.2rem; font-size: 0.9rem; }
+.live-card .desc { font-size: 0.8rem; color: var(--text-dim); margin: 0; }
+.live-error { font-size: 0.82rem; color: #f59e0b; margin: 0; }
+
+.entity-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.3rem;
+  overflow: hidden;
+}
+
+.entity-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+}
+
+.entity-name { color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.entity-state { font-weight: 650; white-space: nowrap; }
+.entity-off .entity-state { color: var(--text-dim); font-weight: 500; }
+
+.status-card { justify-content: center; position: relative; }
+.status-card .name { font-weight: 650; font-size: 0.95rem; }
+
+.status-dot {
+  position: absolute;
+  top: 0.8rem;
+  right: 0.8rem;
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  background: var(--text-dim);
+}
+
+.status-card.is-up .status-dot { background: #22c55e; box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.2); }
+.status-card.is-down .status-dot { background: #ef4444; box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2); }
+.status-card.is-down .desc { color: #f87171; font-weight: 600; }
+
+.clock-card { justify-content: center; }
+.clock-time { font-size: 2.1rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.clock-date { font-size: 0.82rem; color: var(--text-dim); }
+.tile[style*="--h: 2"] .clock-time { font-size: 3.4rem; }
+
+.weather-now { display: flex; align-items: center; gap: 0.5rem; }
+.weather-icon { font-size: 1.9rem; line-height: 1; }
+.weather-temp { font-size: 2rem; font-weight: 700; line-height: 1; }
+.tile[style*="--h: 2"] .weather-icon { font-size: 3rem; }
+.tile[style*="--h: 2"] .weather-temp { font-size: 3rem; }
+
+.theme-playful .live-card { border-width: 2px; }

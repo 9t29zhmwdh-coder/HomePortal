@@ -88,6 +88,15 @@ jobs:
           test "$(curl -s -b "$jar" -o /dev/null -w '%{http_code}' -H 'Content-Type: application/json' -d "$layout" http://localhost/edit/$board/layout)" = 403
           curl -sf -b "$jar" -H 'Content-Type: application/json' -H "X-CSRF-Token: $csrf" -d "$layout" http://localhost/edit/$board/layout | grep -q '"ok":true'
           curl -sf http://localhost/ | grep -q -- '--x: 6'
+      - name: A live status tile works inside the container
+        run: |
+          set -e
+          jar=$(mktemp)
+          curl -sf -c "$jar" -o /dev/null -d "password=ci-smoke-password-123" http://localhost/login
+          csrf=$(curl -sf -b "$jar" http://localhost/settings | grep -o 'name="csrf" value="[^"]*"' | head -1 | cut -d'"' -f4)
+          board=$(sudo python3 -c "import json;print(json.load(open('/tmp/homeportal-data/portal.json'))['dashboards'][0]['id'])")
+          curl -sf -b "$jar" -o /dev/null -d "csrf=$csrf&type=status&name=Self&url=http://app:8000/healthz" http://localhost/edit/$board/tiles
+          curl -sf http://localhost/ | grep -q 'status-card is-up'
       - name: Data folder holds only what the app wrote
         run: |
           ls -la /tmp/homeportal-data

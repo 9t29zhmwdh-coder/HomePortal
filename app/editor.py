@@ -1,9 +1,11 @@
 """Edit mode for one tab: drag tiles into place, pick sizes, add, change and remove tiles."""
 
+from zoneinfo import available_timezones
+
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
 
-from app import store, tiles, web
+from app import connections, i18n, live, store, tiles, web
 from app import portal as portal_data
 
 router = APIRouter(prefix="/edit")
@@ -61,9 +63,7 @@ async def new_tile_page(
     if type not in tiles.TYPES:
         raise HTTPException(status_code=404)
     blank = {"id": "", "type": type, "config": {}}
-    return web.render(
-        request, "tile_form.html", state, board=board, tile=blank, err=err
-    )
+    return render_form(request, state, board, blank, err)
 
 
 @router.post("/{dashboard_id}/tiles", dependencies=[Depends(web.require_admin_form)])
@@ -75,10 +75,10 @@ async def create_tile(request: Request, dashboard_id: str):
     tile_type = next((key for key in tiles.TYPES if key == form.get("type")), None)
     if tile_type is None:
         raise HTTPException(status_code=404)
-    config = tile_config(tile_type, form)
+    config = await tile_config(tile_type, form, request)
     if config is None:
         return web.redirect(
-            f"/edit/{board['id']}/tiles/new?type={tile_type}&err=invalid_tile"
+            f"/edit/{board['id']}/tiles/new?type={tile_type}&err=invalid_{tile_type}"
         )
 
     def change(state):
@@ -96,7 +96,20 @@ async def tile_page(request: Request, dashboard_id: str, tile_id: str, err: str 
     state = web.load_state()
     board = board_or_404(state, dashboard_id)
     tile = tile_or_404(board, tile_id)
-    return web.render(request, "tile_form.html", state, board=board, tile=tile, err=err)
+    return render_form(request, state, board, tile, err)
+
+
+def render_form(request: Request, state: dict, board: dict, tile: dict, err: str):
+    connected = connections.home_assistant(web.data_dir()) is not None
+    return web.render(
+        request,
+        "tile_form.html",
+        state,
+        board=board,
+        tile=tile,
+        err=err,
+        ha_connected=connected,
+    )
 
 
 @router.post(
@@ -106,9 +119,11 @@ async def save_tile(request: Request, dashboard_id: str, tile_id: str):
     form = await request.form()
     board = board_or_404(web.load_state(), dashboard_id)
     tile = tile_or_404(board, tile_id)
-    config = tile_config(tile["type"], form)
+    config = await tile_config(tile["type"], form, request)
     if config is None:
-        return web.redirect(f"/edit/{board['id']}/tiles/{tile['id']}?err=invalid_tile")
+        return web.redirect(
+            f"/edit/{board['id']}/tiles/{tile['id']}?err=invalid_{tile['type']}"
+        )
 
     def change(state):
         tile_or_404(board_or_404(state, dashboard_id), tile_id)["config"] = config
@@ -132,17 +147,57 @@ async def delete_tile(dashboard_id: str, tile_id: str):
     return web.redirect(f"/edit/{board_id}")
 
 
-def tile_config(tile_type: str, form) -> dict | None:
+async def tile_config(tile_type: str, form, request: Request) -> dict | None:
     def text(key: str, limit: int = MAX_TEXT) -> str:
         return str(form.get(key, ""))[:limit].strip()
 
-    if tile_type == "link":
-        config = {key: text(key) for key in ("name", "url", "description", "icon")}
-        if not config["name"] or not portal_data.is_safe_url(config["url"]):
-            return None
-        return config
-    if tile_type == "note":
-        return {"title": text("title"), "text": text("text", MAX_NOTE)}
-    if tile_type == "album":
-        return {"title": text("title")}
-    return None
+    if tile_type == "weather":
+        return await weather_config(text("place"), request)
+    builder = CONFIG_BUILDERS.get(tile_type)
+    return builder(text) if builder else None
+
+
+def link_config(text) -> dict | None:
+    config = {key: text(key) for key in ("name", "url", "description", "icon")}
+    if not config["name"] or not portal_data.is_safe_url(config["url"]):
+        return None
+    return config
+
+
+def ha_config(text) -> dict | None:
+    entities = live.parse_entities(text("entities", 2000))
+    return {"title": text("title"), "entities": entities} if entities else None
+
+
+def status_config(text) -> dict | None:
+    config = {key: text(key) for key in ("name", "url", "icon")}
+    if not config["name"] or not portal_data.is_safe_url(config["url"]):
+        return None
+    return config
+
+
+def clock_config(text) -> dict | None:
+    zone = text("timezone")
+    if zone and zone not in available_timezones():
+        return None
+    return {"title": text("title"), "timezone": zone}
+
+
+async def weather_config(place: str, request: Request) -> dict | None:
+    if not place:
+        return None
+    language = i18n.pick_language(
+        web.load_state()["appearance"]["language"],
+        request.headers.get("accept-language"),
+    )
+    return await live.geocode(place, language)
+
+
+CONFIG_BUILDERS = {
+    "link": link_config,
+    "note": lambda text: {"title": text("title"), "text": text("text", MAX_NOTE)},
+    "album": lambda text: {"title": text("title")},
+    "ha": ha_config,
+    "status": status_config,
+    "clock": clock_config,
+}

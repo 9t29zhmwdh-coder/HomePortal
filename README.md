@@ -12,14 +12,16 @@ Your NAS is on `:5000`, Home Assistant on `:8123`, the media server somewhere
 else. You know them. Nobody else in the house does, and neither will you after
 a holiday.
 
-Home Portal is one landing page with those links on it, plus a small photo
-album, running as a Docker container on the NAS or server you already have.
-You set it up in the browser: tabs, tiles you drag into place in fixed sizes,
-a theme, a background photo or your own picture, a font, English or German.
+Home Portal is one landing page with those links on it, next to what is
+happening right now: values from Home Assistant, which services answer, the
+time and the weather, and a small photo album. It runs as a Docker container on
+the NAS or server you already have. You set it up in the browser: tabs, tiles
+you drag into place in fixed sizes, a theme, a background, a font, English or
+German.
 
-**Not for you if** you need live status, sensor values or service health
-today. Homer, Heimdall and Dashy show those; Home Portal does not yet, it is
-still a page of links and notes.
+**Not for you if** you need history, graphs or alerts. Home Assistant itself,
+Grafana or Uptime Kuma keep and chart values over time; Home Portal shows the
+current value and nothing else.
 
 [![CI](https://github.com/9t29zhmwdh-coder/HomePortal/actions/workflows/ci.yml/badge.svg)](https://github.com/9t29zhmwdh-coder/HomePortal/actions) [![CodeQL](https://github.com/9t29zhmwdh-coder/HomePortal/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/9t29zhmwdh-coder/HomePortal/security/code-scanning) [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/9t29zhmwdh-coder/HomePortal/badge)](https://securityscorecards.dev/viewer/?uri=github.com/9t29zhmwdh-coder/HomePortal) [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13705/badge)](https://www.bestpractices.dev/projects/13705)
 
@@ -81,6 +83,8 @@ HomePortal/
 │   ├── settings.py       # appearance, texts, tabs, uploads, access
 │   ├── editor.py         # edit mode: tile layout, add, change, remove tiles
 │   ├── tiles.py          # tile types, fixed sizes, layout checks
+│   ├── live.py           # Home Assistant, status and weather values, cached
+│   ├── connections.py    # Home Assistant address and token (connections.json)
 │   ├── store.py          # portal.json, migrates 1.2 and 1.3 data once
 │   ├── auth.py           # admin password (Argon2) and sessions
 │   ├── uploads.py        # background uploads, re-encoded without metadata
@@ -121,6 +125,7 @@ portal, so do this right after `docker compose up`.
 | Appearance | Theme (Midnight, Glass, Sunrise, Playful, Paper), background (none, four drawn patterns, seven bundled photos, or your own upload), font (Inter, Nunito, Fredoka, Playfair Display, JetBrains Mono), language (browser, English, German) |
 | Page texts | Title and subtitle |
 | Tabs | Add, rename, reorder, delete (with confirmation); each tab is its own page of tiles |
+| Connections | Home Assistant address and long-lived access token, with a connection test |
 | Access | Require the password to view the page too; change the password |
 
 **Tiles.** On a tab, the pencil icon opens the edit mode. Drag a tile by its
@@ -132,10 +137,24 @@ sizes on a six-column grid, so the page stays tidy wherever they end up:
 | Link | 1×1, 2×1, 1×2, 2×2; name and an `http://` or `https://` address required, description and emoji optional |
 | Note | 1×1, 2×1, 1×2, 2×2, 4×1, 6×1; title and up to 2000 characters of plain text |
 | Photo album | 2×2, 4×2, 6×2, 6×3; shows the pictures from the `photos` folder |
+| Home Assistant | 1×1, 2×1, 1×2, 2×2, 4×1; one to eight entities with their current state and unit, e.g. temperature, lights, doors, or NAS sensors if the NAS is in Home Assistant |
+| Status | 1×1, 2×1; green or red and the response time for any `http(s)` address |
+| Clock | 1×1, 2×1, 2×2; optional time zone |
+| Weather | 1×1, 2×1, 2×2; current weather, today's low and high, wind, for a place you type in |
+
+Live tiles refresh every 30 seconds without reloading the page. Without
+JavaScript they show the values from when the page was loaded.
 
 On a phone the grid folds into two columns and fills gaps on its own.
 
 ![Edit mode](docs/edit.jpg)
+
+**Home Assistant.** Under Settings, Connections, enter the address (for
+example `http://192.168.1.20:8123`) and a long-lived access token, created in
+Home Assistant under your profile, Security, Long-lived access tokens. The
+token is kept in `connections.json` (mode 0600), apart from the other settings,
+and never sent to the browser. Changing the address asks for the token again,
+so it cannot be pointed at another server.
 
 **Album.** Photos come from the `photos` folder in `DATA_PATH`
 (`.jpg`, `.png`, `.webp`, `.gif`, up to 60, sorted by name, file name becomes
@@ -150,7 +169,9 @@ becomes the first tab on first start: each link a 1×1 tile, the album a 6×2
 tile below them. After that, everything is edited in the browser.
 
 Everything is bundled in the container: fonts, patterns and photos load from
-your server, not from the internet. Photo credits and licences (all CC0) are in
+your server, not from the internet. The one exception is the weather tile,
+which asks [Open-Meteo](https://open-meteo.com) (free, no account) every 15
+minutes for the place you set. Photo credits and licences (all CC0) are in
 [`app/static/backgrounds/CREDITS.md`](app/static/backgrounds/CREDITS.md), font
 licences (SIL OFL) in
 [`app/static/fonts/LICENSE-FONTS.txt`](app/static/fonts/LICENSE-FONTS.txt).
@@ -181,7 +202,7 @@ docker compose down
 docker compose down
 ```
 
-Then delete the cloned repository directory. In `DATA_PATH`, Home Portal wrote `portal.json` (settings, tabs and tiles), `auth.json` (password hash) and `uploads/`; your `photos/` folder is yours and was only read. Delete what you no longer need. Home Portal has no other host-level state.
+Then delete the cloned repository directory. In `DATA_PATH`, Home Portal wrote `portal.json` (settings, tabs and tiles), `auth.json` (password hash), `connections.json` (Home Assistant token) and `uploads/`; your `photos/` folder is yours and was only read. Delete what you no longer need. Home Portal has no other host-level state.
 
 ---
 

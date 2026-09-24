@@ -147,6 +147,27 @@
   <p class="dim">{{ t('photos_hint') }}</p>
 </section>
 
+<section class="panel" id="connections">
+  <h2>{{ t('connections') }}</h2>
+  <h3>Home Assistant</h3>
+  <p class="dim">{{ t('ha_intro') }}</p>
+  <form method="post" action="/settings/connections/ha" class="fields">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <label>{{ t('url') }}<input name="url" type="url" value="{{ ha.url }}" placeholder="http://192.168.1.20:8123" required maxlength="200"></label>
+    <label>{{ t('ha_token') }}<input name="token" type="password" autocomplete="off"
+      placeholder="{{ t('ha_token_stored') if ha.has_token else t('ha_token_placeholder') }}" {% if not ha.has_token %}required{% endif %}></label>
+    <p class="form-actions">
+      <button type="submit">{{ t('save_and_test') }}</button>
+      {% if ha.has_token %}
+      <button type="submit" class="ghost" form="ha-test">{{ t('test_connection') }}</button>
+      <button type="submit" class="ghost danger" form="ha-forget">{{ t('disconnect') }}</button>
+      {% endif %}
+    </p>
+  </form>
+  <form id="ha-test" method="post" action="/settings/connections/ha/test" hidden><input type="hidden" name="csrf" value="{{ csrf }}"></form>
+  <form id="ha-forget" method="post" action="/settings/connections/ha/forget" hidden><input type="hidden" name="csrf" value="{{ csrf }}"></form>
+</section>
+
 <section class="panel" id="access">
   <h2>{{ t('security') }}</h2>
   <form method="post" action="/settings/access">

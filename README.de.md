@@ -16,15 +16,16 @@ Das NAS liegt auf `:5000`, Home Assistant auf `:8123`, der Medienserver
 irgendwo anders. Du weisst das. Sonst niemand im Haus, und nach zwei Wochen
 Ferien du auch nicht mehr.
 
-Home Portal ist eine Startseite mit genau diesen Links darauf, dazu ein kleines
-Fotoalbum, als Docker-Container auf dem NAS oder Server, den du ohnehin
-betreibst. Eingerichtet wird im Browser: Reiter, Kacheln in festen Grössen, die du per
-Ziehen platzierst, ein Theme, ein Hintergrundfoto oder ein eigenes Bild, eine
-Schrift, Deutsch oder Englisch.
+Home Portal ist eine Startseite mit genau diesen Links darauf, daneben das,
+was gerade los ist: Werte aus Home Assistant, welche Dienste antworten, Uhrzeit
+und Wetter, dazu ein kleines Fotoalbum. Es läuft als Docker-Container auf dem
+NAS oder Server, den du ohnehin betreibst. Eingerichtet wird im Browser: Reiter,
+Kacheln in festen Grössen, die du per Ziehen platzierst, ein Theme, ein
+Hintergrund, eine Schrift, Deutsch oder Englisch.
 
-**Nichts für dich, wenn** du heute schon Live-Status, Sensorwerte oder
-Service-Health brauchst. Das zeigen Homer, Heimdall und Dashy; Home Portal
-noch nicht, es ist weiterhin eine Seite mit Links und Notizen.
+**Nichts für dich, wenn** du Verläufe, Diagramme oder Alarme brauchst. Home
+Assistant selbst, Grafana oder Uptime Kuma speichern und zeichnen Werte über
+die Zeit; Home Portal zeigt den aktuellen Wert und sonst nichts.
 
 > **So läuft es:** Home Portal ist eine selbst gehostete Web-App, kein Desktop-Tool. Sie läuft dauerhaft als Docker-Container (FastAPI hinter Nginx) auf deinem NAS oder Server, und du öffnest sie über einen beliebigen Browser in deinem Netzwerk; es gibt keinen separaten Installer über `docker compose up` hinaus.
 
@@ -82,6 +83,8 @@ HomePortal/
 │   ├── settings.py       # Aussehen, Texte, Reiter, Uploads, Zugriff
 │   ├── editor.py         # Bearbeiten-Modus: Layout, Kacheln anlegen, ändern, löschen
 │   ├── tiles.py          # Kacheltypen, feste Grössen, Layout-Prüfung
+│   ├── live.py           # Werte aus Home Assistant, Status und Wetter, zwischengespeichert
+│   ├── connections.py    # Adresse und Token von Home Assistant (connections.json)
 │   ├── store.py          # portal.json, übernimmt Daten aus 1.2 und 1.3 einmalig
 │   ├── auth.py           # Admin-Passwort (Argon2) und Sitzungen
 │   ├── uploads.py        # Hintergrund-Uploads, ohne Metadaten neu gespeichert
@@ -122,6 +125,7 @@ besitzt das Portal, also gleich nach `docker compose up` erledigen.
 | Aussehen | Theme (Mitternacht, Glas, Morgenrot, Verspielt, Papier), Hintergrund (keiner, vier gezeichnete Muster, sieben mitgelieferte Fotos oder ein eigenes Bild), Schrift (Inter, Nunito, Fredoka, Playfair Display, JetBrains Mono), Sprache (wie der Browser, Englisch, Deutsch) |
 | Texte der Seite | Titel und Untertitel |
 | Reiter | Hinzufügen, umbenennen, umsortieren, löschen (mit Rückfrage); jeder Reiter ist eine eigene Seite mit Kacheln |
+| Verbindungen | Adresse und langlebiges Zugriffstoken von Home Assistant, mit Verbindungstest |
 | Zugriff | Passwort auch zum Ansehen verlangen; Passwort ändern |
 
 **Kacheln.** Auf einem Reiter öffnet der Stift den Bearbeiten-Modus. Kachel
@@ -134,11 +138,26 @@ aufgeräumt, egal wo sie landen:
 | Link | 1×1, 2×1, 1×2, 2×2; Name und Adresse mit `http://` oder `https://` Pflicht, Beschreibung und Emoji freiwillig |
 | Notiz | 1×1, 2×1, 1×2, 2×2, 4×1, 6×1; Titel und bis 2000 Zeichen reiner Text |
 | Fotoalbum | 2×2, 4×2, 6×2, 6×3; zeigt die Bilder aus dem Ordner `photos` |
+| Home Assistant | 1×1, 2×1, 1×2, 2×2, 4×1; ein bis acht Entitäten mit aktuellem Zustand und Einheit, z. B. Temperatur, Lichter, Türen, oder NAS-Sensoren, wenn das NAS in Home Assistant eingebunden ist |
+| Status | 1×1, 2×1; grün oder rot und die Antwortzeit für eine beliebige `http(s)`-Adresse |
+| Uhr | 1×1, 2×1, 2×2; Zeitzone wählbar |
+| Wetter | 1×1, 2×1, 2×2; aktuelles Wetter, Tiefst- und Höchstwert des Tages, Wind, für einen eingetippten Ort |
+
+Live-Kacheln aktualisieren sich alle 30 Sekunden, ohne dass die Seite neu
+lädt. Ohne JavaScript zeigen sie die Werte vom Zeitpunkt des Aufrufs.
 
 Auf dem Handy klappt das Raster auf zwei Spalten zusammen und füllt Lücken
 selbst.
 
 ![Bearbeiten-Modus](docs/edit.de.jpg)
+
+**Home Assistant.** Unter Einstellungen, Verbindungen die Adresse (zum
+Beispiel `http://192.168.1.20:8123`) und ein langlebiges Zugriffstoken
+eintragen, das du in Home Assistant unter deinem Profil, Sicherheit,
+Langlebige Zugriffstoken erstellst. Der Token liegt in `connections.json`
+(Modus 0600), getrennt von den übrigen Einstellungen, und geht nie an den
+Browser. Wer die Adresse ändert, muss den Token neu eingeben, damit er nicht
+an einen anderen Server umgeleitet werden kann.
 
 **Album.** Die Fotos kommen aus dem Ordner `photos` in `DATA_PATH`
 (`.jpg`, `.png`, `.webp`, `.gif`, bis zu 60, nach Dateiname sortiert, der
@@ -155,7 +174,9 @@ Linkliste (1.3) wird beim ersten Start zum ersten Reiter: jeder Link eine
 bearbeitet.
 
 Alles steckt im Container: Schriften, Muster und Fotos kommen von deinem
-Server, nicht aus dem Internet. Bildnachweise und Lizenzen (alle CC0) stehen in
+Server, nicht aus dem Internet. Einzige Ausnahme ist die Wetter-Kachel, die
+alle 15 Minuten bei [Open-Meteo](https://open-meteo.com) (kostenlos, ohne
+Konto) für den gewählten Ort nachfragt. Bildnachweise und Lizenzen (alle CC0) stehen in
 [`app/static/backgrounds/CREDITS.md`](app/static/backgrounds/CREDITS.md), die
 Schriftlizenzen (SIL OFL) in
 [`app/static/fonts/LICENSE-FONTS.txt`](app/static/fonts/LICENSE-FONTS.txt).
@@ -185,7 +206,7 @@ docker compose down
 docker compose down
 ```
 
-Danach das geklonte Repository-Verzeichnis löschen. In `DATA_PATH` hat Home Portal `portal.json` (Einstellungen, Reiter und Kacheln), `auth.json` (Passwort-Hash) und `uploads/` angelegt; dein Ordner `photos/` gehört dir und wurde nur gelesen. Lösche, was du nicht mehr brauchst. Home Portal hinterlässt keine weiteren Spuren auf dem Host.
+Danach das geklonte Repository-Verzeichnis löschen. In `DATA_PATH` hat Home Portal `portal.json` (Einstellungen, Reiter und Kacheln), `auth.json` (Passwort-Hash), `connections.json` (Home-Assistant-Token) und `uploads/` angelegt; dein Ordner `photos/` gehört dir und wurde nur gelesen. Lösche, was du nicht mehr brauchst. Home Portal hinterlässt keine weiteren Spuren auf dem Host.
 
 ---
 

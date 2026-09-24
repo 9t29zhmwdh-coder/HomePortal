@@ -21,6 +21,23 @@
   {% elif tile.type == 'album' %}
   <label>{{ t('title') }}<input name="title" value="{{ c.title }}" placeholder="{{ t('album') }}" maxlength="200" autofocus></label>
   <p class="dim">{{ t('photos_hint') }}</p>
+  {% elif tile.type == 'ha' %}
+  {% if not ha_connected %}<p class="notice notice-warn">{{ t('ha_not_connected') }} <a href="/settings#connections">{{ t('connections') }}</a></p>{% endif %}
+  <label>{{ t('title') }}<input name="title" value="{{ c.title }}" maxlength="200" autofocus></label>
+  <label>{{ t('ha_entities') }}<textarea name="entities" rows="5" placeholder="sensor.living_room_temperature&#10;light.kitchen&#10;binary_sensor.front_door" required>{{ (c.entities or []) | join('\n') }}</textarea></label>
+  <p class="dim">{{ t('ha_entities_hint') }}</p>
+  {% elif tile.type == 'status' %}
+  <label>{{ t('name') }}<input name="name" value="{{ c.name }}" required maxlength="200" autofocus></label>
+  <label>{{ t('url') }}<input name="url" type="url" value="{{ c.url }}" placeholder="http://192.168.1.10:5000" required maxlength="200"></label>
+  <label>{{ t('icon') }}<input name="icon" value="{{ c.icon }}" placeholder="🗄️" maxlength="8" class="icon-input short"></label>
+  <p class="dim">{{ t('status_hint') }}</p>
+  {% elif tile.type == 'clock' %}
+  <label>{{ t('title') }}<input name="title" value="{{ c.title }}" maxlength="200" autofocus></label>
+  <label>{{ t('timezone') }}<input name="timezone" value="{{ c.timezone }}" placeholder="Europe/Zurich" maxlength="64"></label>
+  <p class="dim">{{ t('timezone_hint') }}</p>
+  {% elif tile.type == 'weather' %}
+  <label>{{ t('place') }}<input name="place" value="{{ c.place }}" placeholder="Aarau" required maxlength="100" autofocus></label>
+  <p class="dim">{{ t('weather_hint') }}</p>
   {% endif %}
 
   <p class="form-actions">

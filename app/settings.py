@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, Depends, Request, UploadFile
 
-from app import auth, catalog, store, tiles, uploads, web
+from app import auth, catalog, connections, live, store, tiles, uploads, web
 
 router = APIRouter(prefix="/settings")
 TEXT_FIELDS = ("title", "subtitle")
@@ -23,7 +23,14 @@ async def settings_page(
         msg=msg,
         err=err,
         confirm_tab=confirm_tab,
+        ha=ha_summary(),
     )
+
+
+def ha_summary() -> dict:
+    """What the page may know about the HA connection: the address, never the token."""
+    ha = connections.load(web.data_dir()).get("home_assistant") or {}
+    return {"url": ha.get("url", ""), "has_token": bool(ha.get("token"))}
 
 
 @router.post("/appearance", dependencies=[Depends(web.require_admin_form)])
@@ -159,3 +166,31 @@ async def change_password(request: Request):
     auth.set_password(web.data_dir(), password)
     # The new key signed out every session, this one included.
     return web.redirect("/login")
+
+
+@router.post("/connections/ha", dependencies=[Depends(web.require_admin_form)])
+async def save_home_assistant(request: Request):
+    form = await request.form()
+    url, token = str(form.get("url", "")), str(form.get("token", ""))
+    problem = connections.set_home_assistant(web.data_dir(), url, token)
+    if problem:
+        return web.redirect(f"/settings?err={problem}#connections")
+    live.clear_cache()
+    return await test_home_assistant()
+
+
+@router.post("/connections/ha/test", dependencies=[Depends(web.require_admin_form)])
+async def test_home_assistant():
+    ha = connections.home_assistant(web.data_dir())
+    if ha is None:
+        return web.redirect("/settings?err=ha_not_connected#connections")
+    result = await live.check_home_assistant(ha["url"], ha["token"])
+    kind = "msg" if result == "ha_ok" else "err"
+    return web.redirect(f"/settings?{kind}={result}#connections")
+
+
+@router.post("/connections/ha/forget", dependencies=[Depends(web.require_admin_form)])
+async def forget_home_assistant():
+    connections.forget_home_assistant(web.data_dir())
+    live.clear_cache()
+    return web.redirect("/settings?msg=saved#connections")

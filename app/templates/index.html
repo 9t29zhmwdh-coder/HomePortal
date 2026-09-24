@@ -22,10 +22,12 @@
 {% else %}
 <div class="board">
   {% for tile in board.tiles | sort(attribute='x') | sort(attribute='y') %}
-  <section class="tile tile-{{ tile.type }}" style="{{ placement(tile) }}">
-    {{ tile_body(tile, photos, t) }}
+  <section class="tile tile-{{ tile.type }}" style="{{ placement(tile) }}"
+    {%- if tile.type in catalog_tiles.LIVE_TYPES %} data-live="/live/{{ board.id }}/{{ tile.id }}"{% endif %}>
+    {{ tile_body(tile, photos, t, live=live) }}
   </section>
   {% endfor %}
 </div>
 {% endif %}
+<script src="/static/js/live.js" defer></script>
 {% endblock %}

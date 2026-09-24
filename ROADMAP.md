@@ -29,9 +29,11 @@
 - Several tabs, each its own page; managed in the settings
 - Layout validated on the server; phones fold the grid into two columns
 
-## v1.5.0, Live Tiles, Planned
-- [ ] Home Assistant entity values (token stays on the server)
-- [ ] Reachability of services (NAS, router, ...), clock, optional weather
+## v1.5.0, Live Tiles (2026-09-24)
+- Home Assistant tile with one to eight entities; token stored apart and never sent to the browser
+- Status tile: reachability and response time of any service
+- Clock with time zone, weather from Open-Meteo (the only internet request, opt-in per tile)
+- Refresh every 30 seconds without reloading
 
 ## v1.6.0, Embedded Apps, Planned
 - [ ] Apps as a tile or a whole tab, with a tested list of which apps allow embedding

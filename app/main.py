@@ -2,10 +2,10 @@ from fastapi import FastAPI, Form, HTTPException, Request
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from app import auth, editor, settings, store, uploads, web
+from app import auth, editor, live, settings, store, tiles, uploads, web
 from app import portal as portal_data
 
-app = FastAPI(title="Home Portal", version="1.4.0")
+app = FastAPI(title="Home Portal", version="1.5.0")
 
 app.mount("/static", StaticFiles(directory=str(web.BASE_DIR / "static")), name="static")
 app.include_router(settings.router)
@@ -20,22 +20,38 @@ async def to_login(request: Request, _exc: web.LoginRequired):
 
 @app.get("/")
 async def index(request: Request):
-    return show_dashboard(request, None)
+    return await show_dashboard(request, None)
 
 
 @app.get("/d/{dashboard_id}")
 async def dashboard(request: Request, dashboard_id: str):
-    return show_dashboard(request, dashboard_id)
+    return await show_dashboard(request, dashboard_id)
 
 
-def show_dashboard(request: Request, dashboard_id: str | None):
+async def show_dashboard(request: Request, dashboard_id: str | None):
     state = web.load_state()
     guard_viewing(request, state)
     board = store.find_dashboard(state, dashboard_id)
     if board is None:
         raise HTTPException(status_code=404)
     photos = portal_data.list_photos(web.data_dir())
-    return web.render(request, "index.html", state, board=board, photos=photos)
+    values = await live.board_data(board, web.data_dir())
+    return web.render(
+        request, "index.html", state, board=board, photos=photos, live=values
+    )
+
+
+@app.get("/live/{dashboard_id}/{tile_id}")
+async def live_tile(request: Request, dashboard_id: str, tile_id: str):
+    """One tile rendered again with fresh values; live.js swaps it in every 30 seconds."""
+    state = web.load_state()
+    guard_viewing(request, state)
+    board = store.find_dashboard(state, dashboard_id)
+    tile = store.find_tile(board, tile_id) if board else None
+    if tile is None or tile["type"] not in tiles.LIVE_TYPES:
+        raise HTTPException(status_code=404)
+    values = {tile["id"]: await live.tile_data(tile, web.data_dir())}
+    return web.render(request, "_live_fragment.html", state, tile=tile, live=values)
 
 
 def guard_viewing(request: Request, state: dict) -> None:
