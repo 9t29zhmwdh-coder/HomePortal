@@ -56,7 +56,7 @@ cd Documents\HomePortal
 
 ### 5. Create and edit your configuration file
 
-Home Portal needs a `.env` file with two settings: where your links and photos live, and your timezone.
+Home Portal needs a `.env` file with two settings: the folder where it keeps its settings and your photos, and your timezone.
 
 ```powershell
 copy .env.example .env
@@ -64,7 +64,7 @@ notepad .env
 ```
 
 In Notepad, set:
-- `DATA_PATH`: the folder that will hold `portal.yaml` and `photos\`, e.g. `C:\HomePortal-data`
+- `DATA_PATH`: the folder for settings, uploads and `photos\`, e.g. `C:\HomePortal-data`
 - `TZ`: your timezone, e.g. `Europe/Zurich`
 
 Save and close Notepad.
@@ -127,7 +127,7 @@ cp .env.example .env
 nano .env
 ```
 
-Set `DATA_PATH` (the folder that will hold `portal.yaml` and `photos/`, e.g. `/volume1/docker/home-portal` on a Synology NAS) and `TZ` (your timezone). Save with `Ctrl+O`, then `Enter`, then exit with `Ctrl+X`.
+Set `DATA_PATH` (the folder for settings, uploads and `photos/`, e.g. `/volume1/docker/home-portal` on a Synology NAS) and `TZ` (your timezone). Save with `Ctrl+O`, then `Enter`, then exit with `Ctrl+X`.
 
 ### 5. Build and start Home Portal
 
@@ -191,16 +191,18 @@ Go to `http://localhost` in your browser.
 
 ## What you should see
 
-After `docker compose up -d --build` finishes, two containers run in the background: the FastAPI app and an Nginx reverse proxy in front of it. Opening the portal address in your browser shows the Home Portal page. On the very first start it has no links yet and tells you which file to create.
+After `docker compose up -d --build` finishes, two containers run in the background: the FastAPI app and an Nginx reverse proxy in front of it. Opening the portal address in your browser shows the Home Portal page. On the very first start it has no links yet and says so.
 
-## Add your links and photos
+## Set a password and add your links
 
-1. Copy the example into your data folder: `cp examples/portal.yaml "$DATA_PATH/portal.yaml"` (Windows: `copy examples\portal.yaml C:\HomePortal-data\portal.yaml`).
-2. Open it in a text editor and replace the example addresses with your own. Every link needs a `name` and a `url` starting with `http://` or `https://`; `description` and `icon` are optional.
-3. Put photos (`.jpg`, `.png`, `.webp`, `.gif`) into a `photos` folder next to it. The file name becomes the caption: `summer-2025.jpg` shows as "Summer 2025".
-4. Reload the page. No restart needed.
+1. Click the gear icon at the top right. Home Portal asks for an admin password (at least 10 characters). Do this right away: whoever sets it first can change the portal.
+2. You land in the settings. Under **Links**, add your services: a name and an address starting with `http://` or `https://`, optionally a description and an emoji.
+3. Under **Appearance**, pick a theme, a background, a font and the language, then **Save**. To use your own picture as background, choose it under **Upload an image**.
+4. Click **Back to the portal**. That is it.
 
-If a link is missing, the page says which one it skipped and why.
+For the album, copy photos into the `photos` folder inside your `DATA_PATH` folder (create it if it is not there), then reload the page.
+
+Anyone on your network can open the page without a password. To change that, tick **Ask for the password to view the portal, too** under **Access**.
 
 To check what's happening behind the scenes:
 
@@ -232,5 +234,7 @@ docker compose up -d --build
 | "Cannot connect to the Docker daemon" | Docker Desktop / the Docker service isn't running | Windows/macOS: open Docker Desktop and wait for it to say "running". Linux: `sudo systemctl start docker` |
 | Windows: error mentioning WSL2 when starting Docker Desktop | WSL2 missing or outdated | Open PowerShell as Administrator, run `wsl --install`, then restart your computer |
 | Browser shows "connection refused" at `http://localhost` or `http://YOUR-HOST` | Containers still starting, or wrong host/IP used | Wait a minute and retry; run `docker compose logs -f app` to check for errors; confirm you're using the correct IP if running on a NAS/remote server |
-| Page says "No links yet" although you created `portal.yaml` | The file is not in the folder `DATA_PATH` points to, or has another name | Check `DATA_PATH` in `.env`; the file must be called exactly `portal.yaml`. After changing `.env`, run `docker compose up -d` again |
-| A link does not appear | Missing `name`, or the `url` does not start with `http://` or `https://` | The yellow box at the top of the page names the skipped link; fix it in `portal.yaml` and reload |
+| Settings say the address is not valid | It does not start with `http://` or `https://` | Write the full address, e.g. `http://192.168.1.10:5000` |
+| "Too many attempts" at login | Five wrong passwords within five minutes | Wait five minutes |
+| Forgot the admin password | Only its hash is stored | Stop the container, delete `auth.json` in `DATA_PATH`, start again and set a new password; links and settings stay |
+| Photos do not show | Wrong folder or format | They must be in `DATA_PATH/photos/` as `.jpg`, `.png`, `.webp` or `.gif` |

@@ -14,10 +14,12 @@ a holiday.
 
 Home Portal is one landing page with those links on it, plus a small photo
 album, running as a Docker container on the NAS or server you already have.
+You set it up in the browser: links, a theme, a background photo or your own
+picture, a font, English or German.
 
-**Not for you if** you want a dashboard with live status, sensor values or
-service health. Homer, Heimdall and Dashy are further along there. This is
-deliberately a page of links, not a monitoring surface.
+**Not for you if** you need live status, sensor values or service health
+today. Homer, Heimdall and Dashy show those; Home Portal does not yet, it is
+still a page of links.
 
 [![CI](https://github.com/9t29zhmwdh-coder/HomePortal/actions/workflows/ci.yml/badge.svg)](https://github.com/9t29zhmwdh-coder/HomePortal/actions) [![CodeQL](https://github.com/9t29zhmwdh-coder/HomePortal/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/9t29zhmwdh-coder/HomePortal/security/code-scanning) [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/9t29zhmwdh-coder/HomePortal/badge)](https://securityscorecards.dev/viewer/?uri=github.com/9t29zhmwdh-coder/HomePortal) [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13705/badge)](https://www.bestpractices.dev/projects/13705)
 
@@ -25,9 +27,9 @@ deliberately a page of links, not a monitoring surface.
 
 > **How it runs:** Home Portal is a self-hosted web app, not a desktop tool. It runs continuously as a Docker container (FastAPI behind Nginx) on your NAS or server, and you open it in any browser on your network; there is no separate installer beyond `docker compose up`.
 
-![Home Portal](docs/screenshot.png)
+![Home Portal](docs/screenshot.jpg)
 
-<p align="center"><sub>Screenshot: <a href="examples/portal.yaml">examples/portal.yaml</a> with the placeholder images from <code>examples/photos/</code>.</sub></p>
+<p align="center"><sub>Screenshot: theme "Glass" with the bundled "Alpine lake" photo, links from <a href="examples/portal.yaml">examples/portal.yaml</a>, placeholder images from <code>examples/photos/</code>.</sub></p>
 
 ---
 
@@ -35,7 +37,7 @@ deliberately a page of links, not a monitoring surface.
 
 ---
 
-**In practice:** you deploy the container once on your NAS or home server, and every device on your network gets a single landing page with quick links to your other self-hosted services (NAS, router, media server, and similar) and a small photo album. You edit one YAML file for the links and drop images into a folder for the album; there is no editor in the browser.
+**In practice:** you deploy the container once on your NAS or home server, and every device on your network gets a single landing page with quick links to your other self-hosted services (NAS, router, media server, and similar) and a small photo album. On first start you set an admin password; after that the gear icon opens the settings, where you add links and pick how the page looks. Viewing stays open on your network unless you require the password for that too.
 
 ---
 
@@ -46,7 +48,7 @@ deliberately a page of links, not a monitoring surface.
 | Backend | [FastAPI](https://fastapi.tiangolo.com) (Python 3.12) |
 | Reverse Proxy | [Nginx](https://nginx.org) (Alpine) |
 | Runtime | Docker & Docker Compose |
-| Content | `portal.yaml` and a photo folder, mounted read-only |
+| Content | `portal.json` in the data folder, photos and uploads next to it |
 
 ## Requirements
 
@@ -75,10 +77,15 @@ The portal will be available at `http://YOUR-HOST`.
 ```
 HomePortal/
 ├── app/
-│   ├── main.py           # FastAPI routes
-│   ├── portal.py         # reads portal.yaml and the photo folder
-│   ├── templates/        # Jinja2 template
-│   └── static/           # stylesheet
+│   ├── main.py           # page, photos, login and setup routes
+│   ├── settings.py       # every route that changes the portal
+│   ├── store.py          # portal.json, imports an old portal.yaml once
+│   ├── auth.py           # admin password (Argon2) and sessions
+│   ├── uploads.py        # background uploads, re-encoded without metadata
+│   ├── catalog.py        # themes, fonts, patterns and photos to choose from
+│   ├── i18n.py           # English and German interface text
+│   ├── templates/        # Jinja2 templates
+│   └── static/           # stylesheet, fonts, background photos
 ├── examples/             # portal.yaml and placeholder photos to start from
 ├── nginx/
 │   └── default.conf      # Nginx reverse proxy config
@@ -94,41 +101,43 @@ Copy `.env.example` to `.env` and adjust:
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `DATA_PATH` | Folder with `portal.yaml` and `photos/` | `/volume1/docker/home-portal` |
+| `DATA_PATH` | Folder for settings, uploads and your `photos/` | `/volume1/docker/home-portal` |
 | `TZ` | Timezone | `Europe/Zurich` |
 
-## Your links and photos
+## Setting it up
 
-Everything on the page comes from the folder `DATA_PATH` points to:
+**First start.** Open the portal and click the gear icon. Home Portal asks for
+an admin password (at least 10 characters). Whoever sets it first owns the
+portal, so do this right after `docker compose up`.
 
-```
-DATA_PATH/
-├── portal.yaml      title, headings and links
-└── photos/          .jpg, .png, .webp or .gif, file name becomes the caption
-```
+**Settings.** Behind the gear icon, after logging in:
 
-Start from [`examples/portal.yaml`](examples/portal.yaml):
+![Settings](docs/settings.jpg)
 
-```yaml
-title: Home Portal
-subtitle: Everything on our network, in one place.
-links_heading: Links        # write "Dienste" and the page says "Dienste"
-album_heading: Album
-links:
-  - name: NAS
-    url: http://192.168.1.10:5000
-    description: File server
-    icon: "🗄️"
-```
+| Section | What you can change |
+|---|---|
+| Appearance | Theme (Midnight, Glass, Sunrise, Playful, Paper), background (none, four drawn patterns, seven bundled photos, or your own upload), font (Inter, Nunito, Fredoka, Playfair Display, JetBrains Mono), language (browser, English, German) |
+| Page texts | Title, subtitle, both headings |
+| Links | Add, edit, reorder, delete; name and an `http://` or `https://` address are required, description and emoji icon are optional |
+| Access | Require the password to view the page too; change the password |
 
-Edits show up on the next page reload. A link without a name, or with a URL
-that is not `http://` or `https://`, is skipped and named in a notice at the
-top of the page. The album shows up to 60 photos, sorted by file name; hidden
-files and anything that is not an image are left out. With no `portal.yaml`
-the page tells you where to create it instead of showing made-up links.
+**Album.** Photos come from the `photos` folder in `DATA_PATH`
+(`.jpg`, `.png`, `.webp`, `.gif`, up to 60, sorted by name, file name becomes
+the caption). Copy them there with the NAS file manager; there is no photo
+upload in the browser.
 
-The container mounts the folder read-only. Home Portal never changes your
-files.
+**Uploaded backgrounds** are decoded and saved again as JPEG, which removes
+location and camera data. JPEG, PNG, WebP and iPhone HEIC up to 20 MB.
+
+**Coming from 1.2?** An existing `portal.yaml` is imported once on first start
+into `portal.json`. After that the settings page is the place to edit; the
+YAML file is no longer read.
+
+Everything is bundled in the container: fonts, patterns and photos load from
+your server, not from the internet. Photo credits and licences (all CC0) are in
+[`app/static/backgrounds/CREDITS.md`](app/static/backgrounds/CREDITS.md), font
+licences (SIL OFL) in
+[`app/static/fonts/LICENSE-FONTS.txt`](app/static/fonts/LICENSE-FONTS.txt).
 
 ## Useful Commands
 
@@ -154,7 +163,7 @@ docker compose down
 docker compose down
 ```
 
-Then delete the cloned repository directory. The `DATA_PATH` folder holds only your own `portal.yaml` and photos, which Home Portal never wrote to; keep or delete it as you like. Home Portal has no other host-level state.
+Then delete the cloned repository directory. In `DATA_PATH`, Home Portal wrote `portal.json` (settings and links), `auth.json` (password hash) and `uploads/`; your `photos/` folder is yours and was only read. Delete what you no longer need. Home Portal has no other host-level state.
 
 ---
 

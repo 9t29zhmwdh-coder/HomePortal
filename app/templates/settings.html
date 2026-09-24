@@ -1,0 +1,163 @@
+{% extends "_base.html" %}
+{% set look = state.appearance %}
+{% set current_bg = look.background.kind ~ ':' ~ look.background.value %}
+{% block title %}{{ t('settings') }} · {{ state.site.title }}{% endblock %}
+{% block body %}
+<header class="page-head">
+  <div>
+    <h1>{{ t('settings') }}</h1>
+    <p><a href="/">{{ t('back_to_portal') }}</a></p>
+  </div>
+  <form method="post" action="/logout"><button class="ghost" type="submit">{{ t('log_out') }}</button></form>
+</header>
+
+{% if msg %}<p class="notice ok">{{ t(msg) }}</p>{% endif %}
+{% if err %}<p class="notice notice-warn">{{ t(err) }}</p>{% endif %}
+
+<section class="panel" id="appearance">
+  <h2>{{ t('appearance') }}</h2>
+  <form method="post" action="/settings/appearance">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+
+    <h3>{{ t('theme') }}</h3>
+    <div class="choice-grid">
+      {% for key, label in catalog.THEMES.items() %}
+      <label class="choice">
+        <input type="radio" name="theme" value="{{ key }}" {% if look.theme == key %}checked{% endif %}>
+        <span class="swatch swatch-{{ key }}"><i></i><i></i><i></i></span>
+        <span>{{ label[lang] }}</span>
+      </label>
+      {% endfor %}
+    </div>
+
+    <h3>{{ t('background') }}</h3>
+    <div class="choice-grid">
+      <label class="choice">
+        <input type="radio" name="background" value="none:" {% if current_bg == 'none:' %}checked{% endif %}>
+        <span class="thumb thumb-none"></span><span>{{ t('bg_none') }}</span>
+      </label>
+    </div>
+    <h4>{{ t('bg_patterns') }}</h4>
+    <div class="choice-grid">
+      {% for key, label in catalog.PATTERNS.items() %}
+      <label class="choice">
+        <input type="radio" name="background" value="pattern:{{ key }}" {% if current_bg == 'pattern:' ~ key %}checked{% endif %}>
+        <span class="thumb bg-pattern bg-{{ key }}"></span><span>{{ label[lang] }}</span>
+      </label>
+      {% endfor %}
+    </div>
+    <h4>{{ t('bg_photos') }}</h4>
+    <div class="choice-grid">
+      {% for key, label in catalog.PHOTOS.items() %}
+      <label class="choice">
+        <input type="radio" name="background" value="photo:{{ key }}" {% if current_bg == 'photo:' ~ key %}checked{% endif %}>
+        <img class="thumb" src="/static/backgrounds/{{ key }}.thumb.jpg" alt="" loading="lazy"><span>{{ label[lang] }}</span>
+      </label>
+      {% endfor %}
+    </div>
+    {% if uploads %}
+    <h4>{{ t('bg_uploads') }}</h4>
+    <div class="choice-grid">
+      {% for name in uploads %}
+      <label class="choice">
+        <input type="radio" name="background" value="upload:{{ name }}" {% if current_bg == 'upload:' ~ name %}checked{% endif %}>
+        <img class="thumb" src="/media/{{ name }}?thumb=true" alt="" loading="lazy">
+        <button class="link-button" type="submit" form="delete-{{ name }}">{{ t('delete') }}</button>
+      </label>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <h3>{{ t('font') }}</h3>
+    <div class="choice-grid fonts">
+      {% for key, font in catalog.FONTS.items() %}
+      <label class="choice">
+        <input type="radio" name="font" value="{{ key }}" {% if look.font == key %}checked{% endif %}>
+        <span class="font-sample" style="font-family: {{ font.family | safe }}">{{ t('font_sample') }}</span>
+        <span>{{ font.label }}</span>
+      </label>
+      {% endfor %}
+    </div>
+
+    <h3>{{ t('language') }}</h3>
+    <select name="language">
+      <option value="auto" {% if look.language == 'auto' %}selected{% endif %}>{{ t('lang_auto') }}</option>
+      <option value="en" {% if look.language == 'en' %}selected{% endif %}>English</option>
+      <option value="de" {% if look.language == 'de' %}selected{% endif %}>Deutsch</option>
+    </select>
+
+    <p><button type="submit">{{ t('save') }}</button></p>
+  </form>
+
+  {% for name in uploads %}
+  <form id="delete-{{ name }}" method="post" action="/settings/uploads/{{ name }}/delete" hidden>
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+  </form>
+  {% endfor %}
+
+  <form class="upload" method="post" action="/settings/uploads" enctype="multipart/form-data">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <h4>{{ t('upload_image') }}</h4>
+    <p class="dim">{{ t('upload_hint') }}</p>
+    <input type="file" name="image" accept="image/*" required>
+    <button type="submit">{{ t('upload_button') }}</button>
+  </form>
+</section>
+
+<section class="panel" id="texts">
+  <h2>{{ t('page_texts') }}</h2>
+  <form method="post" action="/settings/texts" class="fields">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <label>{{ t('title') }}<input name="title" value="{{ state.site.title }}" maxlength="200"></label>
+    <label>{{ t('subtitle') }}<input name="subtitle" value="{{ state.site.subtitle }}" maxlength="200"></label>
+    <label>{{ t('links_heading') }}<input name="links_heading" value="{{ state.site.links_heading }}" placeholder="{{ t('links') }}" maxlength="200"></label>
+    <label>{{ t('album_heading') }}<input name="album_heading" value="{{ state.site.album_heading }}" placeholder="{{ t('album') }}" maxlength="200"></label>
+    <p><button type="submit">{{ t('save') }}</button></p>
+  </form>
+</section>
+
+<section class="panel" id="links">
+  <h2>{{ t('links') }}</h2>
+  {% for link in state.links %}
+  <form method="post" action="/settings/links/{{ link.id }}" class="link-row">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <input name="icon" value="{{ link.icon }}" aria-label="{{ t('icon') }}" class="icon-input" maxlength="8">
+    <input name="name" value="{{ link.name }}" aria-label="{{ t('name') }}" required maxlength="200">
+    <input name="url" value="{{ link.url }}" aria-label="{{ t('url') }}" type="url" required maxlength="200">
+    <input name="description" value="{{ link.description }}" aria-label="{{ t('description') }}" maxlength="200">
+    <span class="row-actions">
+      <button name="action" value="save">{{ t('save') }}</button>
+      <button name="action" value="up" class="ghost" formnovalidate {% if loop.first %}disabled{% endif %}>↑<span class="sr">{{ t('move_up') }}</span></button>
+      <button name="action" value="down" class="ghost" formnovalidate {% if loop.last %}disabled{% endif %}>↓<span class="sr">{{ t('move_down') }}</span></button>
+      <button name="action" value="delete" class="ghost danger" formnovalidate>{{ t('delete') }}</button>
+    </span>
+  </form>
+  {% endfor %}
+  <h3>{{ t('add_link') }}</h3>
+  <form method="post" action="/settings/links" class="link-row">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <input name="icon" placeholder="🏠" aria-label="{{ t('icon') }}" class="icon-input" maxlength="8">
+    <input name="name" placeholder="{{ t('name') }}" required maxlength="200">
+    <input name="url" placeholder="http://192.168.1.10:5000" type="url" required maxlength="200">
+    <input name="description" placeholder="{{ t('description') }}" maxlength="200">
+    <span class="row-actions"><button type="submit">{{ t('add_link') }}</button></span>
+  </form>
+  <p class="dim">{{ t('photos_hint') }}</p>
+</section>
+
+<section class="panel" id="access">
+  <h2>{{ t('security') }}</h2>
+  <form method="post" action="/settings/access">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <label class="check"><input type="checkbox" name="require_login" {% if state.access.require_login_to_view %}checked{% endif %}> {{ t('require_login') }}</label>
+    <p><button type="submit">{{ t('save') }}</button></p>
+  </form>
+  <form method="post" action="/settings/password" class="fields">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <h3>{{ t('change_password') }}</h3>
+    <label>{{ t('new_password') }}<input type="password" name="password" autocomplete="new-password" minlength="10" required></label>
+    <label>{{ t('password_confirm') }}<input type="password" name="confirm" autocomplete="new-password" minlength="10" required></label>
+    <p><button type="submit">{{ t('change_password') }}</button></p>
+  </form>
+</section>
+{% endblock %}

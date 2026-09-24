@@ -1,34 +1,107 @@
-from pathlib import Path
-
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, Form, HTTPException, Request
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
 
+from app import auth, settings, uploads, web
 from app import portal as portal_data
 
-BASE_DIR = Path(__file__).resolve().parent
+app = FastAPI(title="Home Portal", version="1.3.0")
 
-app = FastAPI(title="Home Portal", version="1.2.0")
+app.mount("/static", StaticFiles(directory=str(web.BASE_DIR / "static")), name="static")
+app.include_router(settings.router)
 
-app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
-templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
-templates.env.globals["caption_for"] = portal_data.caption_for
+
+@app.exception_handler(web.LoginRequired)
+async def to_login(request: Request, _exc: web.LoginRequired):
+    target = "/login" if auth.is_set_up(web.data_dir()) else "/setup"
+    return web.redirect(target)
 
 
 @app.get("/")
 async def index(request: Request):
-    portal = portal_data.load_portal(portal_data.DATA_DIR)
-    context = {"portal": portal, "data_dir": str(portal_data.DATA_DIR)}
-    return templates.TemplateResponse(request, "index.html", context)
+    state = web.load_state()
+    guard_viewing(request, state)
+    photos = portal_data.list_photos(web.data_dir())
+    return web.render(request, "index.html", state, photos=photos)
+
+
+def guard_viewing(request: Request, state: dict) -> None:
+    if state["access"]["require_login_to_view"] and auth.is_set_up(web.data_dir()):
+        web.require_admin(request)
 
 
 @app.get("/photos/{name}")
-async def photo(name: str):
-    path = portal_data.resolve_photo(name, portal_data.DATA_DIR)
+async def photo(request: Request, name: str):
+    guard_viewing(request, web.load_state())
+    return file_or_404(portal_data.resolve_photo(name, web.data_dir()))
+
+
+@app.get("/media/{name}")
+async def media(request: Request, name: str, thumb: bool = False):
+    guard_viewing(request, web.load_state())
+    return file_or_404(uploads.resolve_upload(web.data_dir(), name, thumb))
+
+
+def file_or_404(path):
     if path is None:
         raise HTTPException(status_code=404)
     return FileResponse(path)
+
+
+@app.get("/setup")
+async def setup_page(request: Request, err: str = ""):
+    if auth.is_set_up(web.data_dir()):
+        return web.redirect("/login")
+    return web.render(request, "setup.html", web.load_state(), err=err)
+
+
+@app.post("/setup")
+async def setup(password: str = Form(""), confirm: str = Form("")):
+    if auth.is_set_up(web.data_dir()):
+        raise HTTPException(status_code=403)
+    problem = auth.password_problem(password, confirm)
+    if problem:
+        return web.redirect(f"/setup?err={problem}")
+    auth.set_password(web.data_dir(), password)
+    return logged_in_redirect("/settings")
+
+
+@app.get("/login")
+async def login_page(request: Request, err: str = ""):
+    if not auth.is_set_up(web.data_dir()):
+        return web.redirect("/setup")
+    return web.render(request, "login.html", web.load_state(), err=err)
+
+
+@app.post("/login")
+async def login(request: Request, password: str = Form("")):
+    client = web.client_id(request)
+    if auth.is_locked_out(client):
+        return web.redirect("/login?err=login_locked")
+    if not auth.check_password(web.data_dir(), password):
+        auth.record_failure(client)
+        return web.redirect("/login?err=login_failed")
+    auth.clear_failures(client)
+    return logged_in_redirect("/settings")
+
+
+@app.post("/logout")
+async def logout():
+    response = web.redirect("/")
+    response.delete_cookie(auth.COOKIE_NAME)
+    return response
+
+
+def logged_in_redirect(path: str):
+    response = web.redirect(path)
+    response.set_cookie(
+        auth.COOKIE_NAME,
+        auth.issue_session(web.data_dir()),
+        max_age=auth.SESSION_MAX_AGE,
+        httponly=True,
+        samesite="strict",
+    )
+    return response
 
 
 @app.get("/healthz")

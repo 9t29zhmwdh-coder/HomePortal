@@ -2,47 +2,55 @@
 
 ## Overview
 
-HomePortal renders one page from two things in a data folder: `portal.yaml`
-(title, headings, links) and `photos/` (the album). FastAPI reads both on every
-request, Nginx sits in front, Docker Compose runs the two containers.
+HomePortal renders one page from `portal.json` in the data folder and the
+images in its `photos/` subfolder. An admin changes `portal.json` through the
+settings page after logging in. FastAPI serves everything, Nginx sits in
+front, Docker Compose runs the two containers.
 
 ```
-HomePortal/
-├── app/
-│   ├── main.py            # routes: /, /photos/{name}, /healthz
-│   ├── portal.py          # reads and validates portal.yaml, lists photos/
-│   ├── templates/         # index.html (Jinja2, autoescaped)
-│   └── static/css/        # stylesheet
-├── examples/
-│   ├── portal.yaml        # starting point for your own portal.yaml
-│   └── photos/            # four placeholder images, used for tests and screenshots
-├── nginx/default.conf     # reverse proxy, forwards everything to the app
-├── tests/test_smoke.py
-├── docker-compose.yml     # mounts DATA_PATH read-only at /data
-└── Dockerfile
+app/
+├── main.py       page, /photos, /media, /setup, /login, /logout, /healthz
+├── settings.py   /settings and every POST that changes the portal
+├── web.py        shared helpers: rendering, session lookup, CSRF check
+├── store.py      portal.json: load, atomic save, one-time import of portal.yaml
+├── auth.py       auth.json: Argon2 password hash, session key, login lockout
+├── uploads.py    background uploads: decode, re-encode as JPEG, thumbnails
+├── catalog.py    themes, fonts, patterns and bundled photos
+├── i18n.py       English and German interface text
+├── portal.py     legacy YAML reader (import only) and the photo folder
+├── templates/    _base, index, settings, setup, login
+└── static/       style.css, fonts.css, fonts/, backgrounds/
 ```
 
-## Data flow
+## Data folder
 
-1. `GET /` calls `load_portal()`, which reads `/data/portal.yaml` and lists `/data/photos/`.
-2. Links whose URL is not `http(s)://host` are dropped and reported on the page, so a
-   `javascript:` or `data:` URL can never become a clickable link.
-3. `GET /photos/{name}` serves a file only if that exact name is in the photo list,
-   which rules out `../`, hidden files and anything that is not an image.
+| File | Written by | Content |
+|---|---|---|
+| `portal.json` | settings page | site texts, appearance, links, access switch |
+| `auth.json` (0600) | setup, password change | Argon2 hash, session signing key |
+| `uploads/` | background upload | re-encoded JPEGs and thumbnails, random names |
+| `photos/` | you | album pictures, only read |
+| `portal.yaml` | you (1.2) | imported once if `portal.json` does not exist yet |
 
-There is no database and no write path: the container mounts the data folder read-only.
+## Security model
 
-## Stack
-
-| Layer    | Technology                     |
-|----------|--------------------------------|
-| Backend  | Python 3.12, FastAPI, PyYAML   |
-| Proxy    | Nginx (Alpine)                 |
-| Runtime  | Docker Compose                 |
+- **Viewing** is open on the network by default; the admin can require the
+  password for the page, the album and uploaded images.
+- **Changing** needs a session: a signed, HttpOnly, SameSite=Strict cookie,
+  valid 30 days. Every form also carries a per-session CSRF token.
+- **Password**: at least 10 characters, stored as an Argon2 hash. Changing it
+  rotates the signing key and ends every session.
+- **Login lockout**: five failures per client address within five minutes.
+  Nginx overwrites `X-Forwarded-For`, so the address cannot be forged from outside.
+- **Links**: only `http(s)://host` URLs are accepted; Jinja autoescapes all text.
+- **Files**: `/photos/{name}` and `/media/{name}` return a file only when the
+  name is in the directory listing, so the request never builds a path.
+- **Uploads**: at most 20 MB, decoded with Pillow (decompression-bomb limit
+  60 megapixels), written again as JPEG, which drops EXIF and GPS.
 
 ## CI
 
-`.github/workflows/ci.yml` runs ruff (lint and format), the pytest suite with
-coverage, and a Docker Compose smoke test that starts the real stack with the
-example data and checks through Nginx that a link, a photo and the stylesheet
-are served.
+`.github/workflows/ci.yml` runs ruff, the pytest suite with coverage, and a
+Docker Compose smoke test against the real stack through Nginx: links, photos
+and the stylesheet are served, setup and login work, a 3 MB upload passes
+Nginx, and a forged `X-Forwarded-For` does not get around the lockout.

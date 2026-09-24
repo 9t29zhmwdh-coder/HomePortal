@@ -3,6 +3,31 @@
 All notable changes to HomePortal will be documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.3.0] - 2026-09-24
+
+### Added
+
+- Settings in the browser behind the gear icon: links (add, edit, reorder, delete), page texts, appearance, access. Before this, changing anything meant editing `portal.yaml` on the server.
+- Admin password, set on first start. Stored as an Argon2 hash in `auth.json` (mode 0600); sessions are signed HttpOnly, SameSite=Strict cookies; every form carries a CSRF token; five wrong passwords lock the client out for five minutes; changing the password ends every session.
+- Five themes: Midnight, Glass, Sunrise, Playful, Paper.
+- Backgrounds: four patterns drawn in CSS, seven bundled photos (CC0, sources in `app/static/backgrounds/CREDITS.md`), or your own upload. Uploads are re-encoded as JPEG, which removes location and camera data; JPEG, PNG, WebP and iPhone HEIC up to 20 MB.
+- Five bundled fonts under the SIL Open Font License: Inter, Nunito, Fredoka, Playfair Display, JetBrains Mono.
+- Interface in English and German, following the browser unless set.
+- Optional: require the password to view the page, the album and uploaded images.
+- Two-column tiles on phones.
+
+### Changed
+
+- Settings live in `portal.json` in `DATA_PATH`. An existing `portal.yaml` is imported once on first start, and its default headings are dropped so they follow the language.
+- The data folder is mounted read-write, since settings and uploads are saved there.
+- Nginx accepts request bodies up to 21 MB for uploads (its default of 1 MB would have refused every photo).
+
+### Security
+
+- Behind Nginx every request came from the same address, so the login lockout would have locked everyone out at once, and anyone on the network could have locked out the admin on purpose. Uvicorn now takes the client address from Nginx, which overwrites any `X-Forwarded-For` sent by the client. CI checks that a forged header does not get around the lockout.
+
+---
+
 ## [1.2.0] - 2026-09-24
 
 ### Added
