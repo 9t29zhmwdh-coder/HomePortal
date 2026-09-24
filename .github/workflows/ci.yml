@@ -36,18 +36,16 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Prepare environment
         run: |
-          mkdir -p /tmp/homeportal-data/static /tmp/homeportal-data/data
-          cat > .env <<EOF
-          DATA_PATH=/tmp/homeportal-data
-          TZ=Europe/Zurich
-          APP_SECRET_KEY=ci-smoke-test-secret
-          EOF
+          mkdir -p /tmp/homeportal-data
+          cp examples/portal.yaml /tmp/homeportal-data/
+          cp -r examples/photos /tmp/homeportal-data/
+          printf 'DATA_PATH=/tmp/homeportal-data\nTZ=Europe/Zurich\n' > .env
       - name: Build and start stack
         run: docker compose up -d --build
       - name: Wait for portal to become reachable
         run: |
           for i in $(seq 1 30); do
-            if curl -sf http://localhost/ > /dev/null; then
+            if curl -sf http://localhost/healthz > /dev/null; then
               echo "Portal is up"
               exit 0
             fi
@@ -56,6 +54,14 @@ jobs:
           echo "Portal never came up"
           docker compose logs
           exit 1
+      - name: Check content through Nginx
+        run: |
+          set -e
+          curl -sf http://localhost/ | grep -q 'href="http://192.168.1.10:5000"'
+          curl -sf http://localhost/ | grep -q 'src="/photos/beach-day.jpg"'
+          curl -sf -o /dev/null -w '%{content_type}\n' http://localhost/photos/beach-day.jpg | grep -q image/jpeg
+          curl -sf http://localhost/static/css/style.css | grep -q link-card
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost/photos/..%2Fportal.yaml)" = 404
       - name: Tear down
         if: always()
         run: docker compose down

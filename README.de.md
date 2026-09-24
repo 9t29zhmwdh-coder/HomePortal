@@ -26,9 +26,9 @@ bewusst eine Linkseite, keine Überwachungsoberfläche.
 
 > **So läuft es:** Home Portal ist eine selbst gehostete Web-App, kein Desktop-Tool. Sie läuft dauerhaft als Docker-Container (FastAPI hinter Nginx) auf deinem NAS oder Server, und du öffnest sie über einen beliebigen Browser in deinem Netzwerk; es gibt keinen separaten Installer über `docker compose up` hinaus.
 
-![Home Portal](docs/screenshot.png)
+![Home Portal](docs/screenshot.de.png)
 
-<p align="center"><sub>Der Screenshot zeigt Demo-Platzhalterinhalte (Quick Links, Beispiel-"Familienalbum"-Fotos), keine echten Daten.</sub></p>
+<p align="center"><sub>Screenshot: eine deutsche Variante von <a href="examples/portal.yaml">examples/portal.yaml</a> mit den Platzhalterbildern aus <code>examples/photos/</code>.</sub></p>
 
 ---
 
@@ -36,7 +36,7 @@ bewusst eine Linkseite, keine Überwachungsoberfläche.
 
 ---
 
-**In der Praxis:** du bringst den Container einmal auf deinem NAS oder Heimserver zum Laufen, und jedes Gerät in deinem Netzwerk bekommt eine einzige Startseite mit Schnellzugriffen auf deine anderen selbst gehosteten Dienste (NAS, Router, Medienserver und Ähnliches) sowie ein kleines Fotoalbum-Widget; weitere Widgets und Bookmark-Bearbeitung stehen auf der [Roadmap](ROADMAP.md).
+**In der Praxis:** du bringst den Container einmal auf deinem NAS oder Heimserver zum Laufen, und jedes Gerät in deinem Netzwerk bekommt eine einzige Startseite mit Schnellzugriffen auf deine anderen selbst gehosteten Dienste (NAS, Router, Medienserver und Ähnliches) sowie ein kleines Fotoalbum. Die Links trägst du in eine YAML-Datei ein, die Fotos legst du in einen Ordner; einen Editor im Browser gibt es nicht.
 
 ---
 
@@ -47,7 +47,7 @@ bewusst eine Linkseite, keine Überwachungsoberfläche.
 | Backend | [FastAPI](https://fastapi.tiangolo.com) (Python 3.12) |
 | Reverse Proxy | [Nginx](https://nginx.org) (Alpine) |
 | Laufzeitumgebung | Docker & Docker Compose |
-| Speicher | SQLite + lokales Dateisystem |
+| Inhalt | `portal.yaml` und ein Fotoordner, nur lesend eingebunden |
 
 ## Voraussetzungen
 
@@ -59,7 +59,7 @@ bewusst eine Linkseite, keine Überwachungsoberfläche.
 ```bash
 # 1. Repo klonen
 git clone https://github.com/9t29zhmwdh-coder/HomePortal.git
-cd home-portal
+cd HomePortal
 
 # 2. Konfiguration anpassen
 cp .env.example .env
@@ -74,11 +74,13 @@ Das Portal ist danach unter `http://DEIN-HOST` erreichbar.
 ## Verzeichnisstruktur
 
 ```
-home-portal/
+HomePortal/
 ├── app/
-│   ├── main.py           # FastAPI Einstiegspunkt
-│   ├── templates/        # Jinja2-Templates
-│   └── static/           # Statische Dateien (CSS, Bilder)
+│   ├── main.py           # FastAPI-Routen
+│   ├── portal.py         # liest portal.yaml und den Fotoordner
+│   ├── templates/        # Jinja2-Template
+│   └── static/           # Stylesheet
+├── examples/             # portal.yaml und Platzhalterfotos als Vorlage
 ├── nginx/
 │   └── default.conf     # Nginx Reverse-Proxy-Konfiguration
 ├── Dockerfile
@@ -93,9 +95,42 @@ home-portal/
 
 | Variable | Beschreibung | Beispiel |
 |----------|-------------|---------|
-| `DATA_PATH` | Pfad für persistente Daten | `/volume1/docker/home-portal` |
+| `DATA_PATH` | Ordner mit `portal.yaml` und `photos/` | `/volume1/docker/home-portal` |
 | `TZ` | Zeitzone | `Europe/Zurich` |
-| `APP_SECRET_KEY` | Secret Key für Sessions | `zufälliger-string` |
+
+## Deine Links und Fotos
+
+Alles auf der Seite kommt aus dem Ordner, auf den `DATA_PATH` zeigt:
+
+```
+DATA_PATH/
+├── portal.yaml      Titel, Überschriften und Links
+└── photos/          .jpg, .png, .webp oder .gif, der Dateiname wird zur Bildunterschrift
+```
+
+Als Vorlage dient [`examples/portal.yaml`](examples/portal.yaml):
+
+```yaml
+title: Unser Zuhause
+subtitle: Alles aus unserem Netz, an einem Ort.
+links_heading: Dienste
+album_heading: Familienalbum
+links:
+  - name: NAS
+    url: http://192.168.1.10:5000
+    description: Dateiserver
+    icon: "🗄️"
+```
+
+Änderungen erscheinen beim nächsten Neuladen der Seite. Ein Link ohne Namen
+oder mit einer URL, die nicht mit `http://` oder `https://` beginnt, wird
+übersprungen und oben auf der Seite genannt. Das Album zeigt bis zu 60 Fotos,
+nach Dateiname sortiert; versteckte Dateien und alles, was kein Bild ist,
+bleiben draussen. Fehlt `portal.yaml`, sagt die Seite, wo die Datei hingehört,
+statt erfundene Links zu zeigen.
+
+Der Container bindet den Ordner nur lesend ein. Home Portal verändert deine
+Dateien nie.
 
 ## Nützliche Befehle
 
@@ -119,8 +154,8 @@ docker compose down
 docker compose down
 ```
 
-Lösche das in `.env` konfigurierte `DATA_PATH`-Verzeichnis, um alle persistierten Daten zu entfernen, sowie das geklonte Repository-Verzeichnis selbst. Home Portal hinterlässt keine weiteren Spuren auf dem Host.
+Danach das geklonte Repository-Verzeichnis löschen. Der `DATA_PATH`-Ordner enthält nur deine eigene `portal.yaml` und deine Fotos, in die Home Portal nie geschrieben hat; behalten oder löschen, wie du willst. Home Portal hinterlässt keine weiteren Spuren auf dem Host.
 
 ---
 
-**Autor:** [Rafael Yilmaz](https://github.com/9t29zhmwdh-coder) · **Status:** Active · ![version](https://img.shields.io/github/v/release/9t29zhmwdh-coder/HomePortal?color=6b7280&style=flat-square) · **Lizenz:** MIT
+**Autor:** [Rafael Yilmaz](https://github.com/9t29zhmwdh-coder) · **Status:** Aktiv · ![version](https://img.shields.io/github/v/release/9t29zhmwdh-coder/HomePortal?color=6b7280&style=flat-square) · **Lizenz:** MIT

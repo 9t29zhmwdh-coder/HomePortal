@@ -27,7 +27,7 @@ deliberately a page of links, not a monitoring surface.
 
 ![Home Portal](docs/screenshot.png)
 
-<p align="center"><sub>Screenshot shows demo placeholder content (Quick Links, sample "Family Album" photos), not real data.</sub></p>
+<p align="center"><sub>Screenshot: <a href="examples/portal.yaml">examples/portal.yaml</a> with the placeholder images from <code>examples/photos/</code>.</sub></p>
 
 ---
 
@@ -35,7 +35,7 @@ deliberately a page of links, not a monitoring surface.
 
 ---
 
-**In practice:** you deploy the container once on your NAS or home server, and every device on your network gets a single landing page with quick links to your other self-hosted services (NAS, router, media server, and similar) and a small photo album widget; further widgets and bookmark editing are on the [roadmap](ROADMAP.md).
+**In practice:** you deploy the container once on your NAS or home server, and every device on your network gets a single landing page with quick links to your other self-hosted services (NAS, router, media server, and similar) and a small photo album. You edit one YAML file for the links and drop images into a folder for the album; there is no editor in the browser.
 
 ---
 
@@ -46,7 +46,7 @@ deliberately a page of links, not a monitoring surface.
 | Backend | [FastAPI](https://fastapi.tiangolo.com) (Python 3.12) |
 | Reverse Proxy | [Nginx](https://nginx.org) (Alpine) |
 | Runtime | Docker & Docker Compose |
-| Storage | SQLite + local file system |
+| Content | `portal.yaml` and a photo folder, mounted read-only |
 
 ## Requirements
 
@@ -58,7 +58,7 @@ deliberately a page of links, not a monitoring surface.
 ```bash
 # 1. Clone repository
 git clone https://github.com/9t29zhmwdh-coder/HomePortal.git
-cd home-portal
+cd HomePortal
 
 # 2. Configure environment
 cp .env.example .env
@@ -73,11 +73,13 @@ The portal will be available at `http://YOUR-HOST`.
 ## Directory Structure
 
 ```
-home-portal/
+HomePortal/
 ├── app/
-│   ├── main.py           # FastAPI application entry point
-│   ├── templates/        # Jinja2 templates
-│   └── static/           # Static assets (CSS, images)
+│   ├── main.py           # FastAPI routes
+│   ├── portal.py         # reads portal.yaml and the photo folder
+│   ├── templates/        # Jinja2 template
+│   └── static/           # stylesheet
+├── examples/             # portal.yaml and placeholder photos to start from
 ├── nginx/
 │   └── default.conf      # Nginx reverse proxy config
 ├── Dockerfile
@@ -92,9 +94,41 @@ Copy `.env.example` to `.env` and adjust:
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `DATA_PATH` | Path for persistent data | `/volume1/docker/home-portal` |
+| `DATA_PATH` | Folder with `portal.yaml` and `photos/` | `/volume1/docker/home-portal` |
 | `TZ` | Timezone | `Europe/Zurich` |
-| `APP_SECRET_KEY` | Secret key for sessions | `random-string` |
+
+## Your links and photos
+
+Everything on the page comes from the folder `DATA_PATH` points to:
+
+```
+DATA_PATH/
+├── portal.yaml      title, headings and links
+└── photos/          .jpg, .png, .webp or .gif, file name becomes the caption
+```
+
+Start from [`examples/portal.yaml`](examples/portal.yaml):
+
+```yaml
+title: Home Portal
+subtitle: Everything on our network, in one place.
+links_heading: Links        # write "Dienste" and the page says "Dienste"
+album_heading: Album
+links:
+  - name: NAS
+    url: http://192.168.1.10:5000
+    description: File server
+    icon: "🗄️"
+```
+
+Edits show up on the next page reload. A link without a name, or with a URL
+that is not `http://` or `https://`, is skipped and named in a notice at the
+top of the page. The album shows up to 60 photos, sorted by file name; hidden
+files and anything that is not an image are left out. With no `portal.yaml`
+the page tells you where to create it instead of showing made-up links.
+
+The container mounts the folder read-only. Home Portal never changes your
+files.
 
 ## Useful Commands
 
@@ -120,7 +154,7 @@ docker compose down
 docker compose down
 ```
 
-Delete the `DATA_PATH` directory configured in `.env` to remove all persisted data, and delete the cloned repository directory itself. Home Portal has no other host-level state.
+Then delete the cloned repository directory. The `DATA_PATH` folder holds only your own `portal.yaml` and photos, which Home Portal never wrote to; keep or delete it as you like. Home Portal has no other host-level state.
 
 ---
 

@@ -1,11 +1,9 @@
 # Privacy Policy
 
-HomePortal is a self-hosted application. All data : bookmarks, widgets, credentials,
-and configuration : resides exclusively on your own server. Nothing is transmitted
-to external services by the application itself.
+HomePortal is a self-hosted application. Your links and photos stay in the data
+folder on your own server; the container only reads them and never writes.
 
 - **No telemetry:** HomePortal does not collect usage data or phone home.
-- **No cloud dependency:** Fully offline-capable after installation.
-- **Your server, your data:** You control access via Nginx reverse proxy and your own network setup.
-
-Third-party services you configure (e.g. weather APIs, RSS feeds) are subject to their own privacy policies.
+- **No external requests:** the page loads nothing from the internet; fonts, styles and photos come from your server.
+- **No accounts, no cookies:** there is no login and no session.
+- **Who can see it:** anyone who can reach the port on your network. Do not expose it to the internet without putting access control in front of it, since your photos are on it.
