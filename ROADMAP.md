@@ -39,8 +39,20 @@
 - Apps as a tile (2x2 to 6x4) or across a whole tab
 - Instead of a list from memory, the portal checks each app's framing headers and explains a refusal with a button to open it; Home Assistant's setting verified in its source code
 
-## v2.0.0
-- [ ] README repositioned from "page of links" to dashboard, everything above verified together
+## v2.0.0, Dashboard (2026-09-24)
+- README repositioned from "a page of links" to a home dashboard
+- STRIDE threat model (`docs/THREAT_MODEL.md`), audit trail for every change, error references
+- Dependencies pinned with hashes in `requirements.lock`, `pip-audit` on every pull request, CycloneDX SBOM on every release
+- Session cookie gets the Secure flag behind a TLS proxy
+
+## Known limitations
+- [ ] No TLS in the bundled stack; a TLS proxy in front is documented but not included
+- [ ] Logout does not revoke a copied session cookie; only a password change ends all sessions
+- [ ] Behind a TLS proxy, the login lockout counts the proxy's address unless the proxy forwards the client address
+
+## Ideas, not scheduled
+- [ ] Optional TLS in the bundled Nginx with a certificate from the data folder
+- [ ] Server-side session list with "log out everywhere"
 
 ## Dual-Licensing Readiness
 

@@ -21,6 +21,7 @@ app/
 ├── uploads.py    background uploads: decode, re-encode as JPEG, thumbnails
 ├── catalog.py    themes, fonts, patterns and bundled photos
 ├── i18n.py       English and German interface text
+├── audit.py      audit trail and error references, JSON lines on stdout
 ├── portal.py     legacy YAML reader (import only) and the photo folder
 ├── templates/    _base, _tabs, _tiles, index, edit, tile_form, settings, setup, login
 └── static/       style.css, fonts.css, fonts/, backgrounds/, js/editor.js, vendor/gridstack
@@ -95,9 +96,18 @@ swaps in the server-rendered tile; clocks tick in the browser.
 - **Uploads**: at most 20 MB, decoded with Pillow (decompression-bomb limit
   60 megapixels), written again as JPEG, which drops EXIF and GPS.
 
+## Dependencies and supply chain
+
+`requirements.txt` names the direct dependencies. `requirements.lock` pins every
+package, direct and transitive, with its hash for Python 3.12; the image installs
+it with `pip install --require-hashes`. CI regenerates the lock from
+`requirements.txt` and fails if it differs, and runs `pip-audit` against it. The
+release workflow attaches a CycloneDX SBOM built from the same lock file.
+
 ## CI
 
-`.github/workflows/ci.yml` runs ruff, the pytest suite with coverage, and a
+`.github/workflows/ci.yml` runs ruff, the pytest suite with coverage, the
+dependency audit and lock check, and a
 Docker Compose smoke test against the real stack through Nginx: links, photos
 and the stylesheet are served, setup and login work, a 3 MB upload passes
 Nginx, a tile layout saves only with the CSRF header, and a forged `X-Forwarded-For`

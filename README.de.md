@@ -10,7 +10,7 @@
 
 [🇬🇧 English Version](README.md)
 
-**Eine Seite im Heimnetz, die auf alles verlinkt, was du selbst hostest, damit sich niemand die Ports merken muss.**
+**Eine Seite fürs Heimnetz: alles, was du selbst hostest, einen Klick entfernt, und was es gerade tut.**
 
 Das NAS liegt auf `:5000`, Home Assistant auf `:8123`, der Medienserver
 irgendwo anders. Du weisst das. Sonst niemand im Haus, und nach zwei Wochen
@@ -85,6 +85,7 @@ HomePortal/
 │   ├── tiles.py          # Kacheltypen, feste Grössen, Layout-Prüfung
 │   ├── live.py           # Werte aus Home Assistant, Status und Wetter, zwischengespeichert
 │   ├── connections.py    # Adresse und Token von Home Assistant (connections.json)
+│   ├── audit.py          # Audit-Protokoll und Fehlerreferenzen auf stdout
 │   ├── store.py          # portal.json, übernimmt Daten aus 1.2 und 1.3 einmalig
 │   ├── auth.py           # Admin-Passwort (Argon2) und Sitzungen
 │   ├── uploads.py        # Hintergrund-Uploads, ohne Metadaten neu gespeichert
@@ -97,7 +98,8 @@ HomePortal/
 │   └── default.conf     # Nginx Reverse-Proxy-Konfiguration
 ├── Dockerfile
 ├── docker-compose.yml
-├── requirements.txt
+├── requirements.txt      # direkte Abhängigkeiten
+├── requirements.lock     # jedes Paket mit Hash festgelegt, nutzt das Image
 └── .env.example
 ```
 
@@ -201,6 +203,30 @@ Schriftlizenzen (SIL OFL) in
 Der Bearbeiten-Modus nutzt [gridstack.js](https://gridstackjs.com) (MIT),
 mitgeliefert in `app/static/vendor/gridstack`; die Seite selbst braucht kein
 JavaScript.
+
+## Sicherheit
+
+Ansehen ist in deinem Netz offen, ausser du verlangst dafür das Passwort; jede
+Änderung braucht den Admin-Login. Die vollständige Analyse steht in
+[`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md). Kurz: Argon2-Passwort-Hash,
+signierte SameSite=Strict-Sitzung, CSRF-Tokens, Sperre nach fünf falschen
+Anmeldungen, serverseitige Prüfung jedes Layouts und jeder Adresse, Uploads
+ohne Metadaten neu gespeichert, der Home-Assistant-Token getrennt abgelegt und
+nie an den Browser geschickt, und eine Audit-Zeile für jede Änderung in
+`docker compose logs app`.
+
+> **Hinweis:** Home Portal läuft über reines HTTP. Im Heimnetz ist das üblich,
+> Passwort und Sitzungs-Cookie gehen dabei aber unverschlüsselt durchs Netz.
+> Für alles darüber hinaus gehört ein TLS-Proxy davor (zum Beispiel der
+> Reverse-Proxy deines NAS), der `X-Forwarded-Proto` weiterreicht; das
+> Sitzungs-Cookie bekommt dann das `Secure`-Flag von selbst.
+
+> **Hinweis:** Abmelden entfernt das Cookie aus deinem Browser, macht eine
+> Kopie davon aber nicht ungültig. Ein Passwortwechsel beendet alle Sitzungen
+> auf einmal.
+
+Jedes Release auf GitHub enthält ein CycloneDX-SBOM der Pakete, die der
+Container genau installiert (`requirements.lock`, mit Hashes festgelegt).
 
 ## Nützliche Befehle
 

@@ -45,6 +45,16 @@ jobs:
             exit 1
           fi
 
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+
+      - name: Generate the SBOM
+        run: |
+          # CycloneDX bill of materials for exactly the pinned packages the container installs.
+          pip install cyclonedx-bom==7.4.0
+          cyclonedx-py requirements requirements.lock --of JSON -o "homeportal-${GITHUB_REF_NAME}-sbom.cdx.json"
+
       - name: Create the release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -53,10 +63,11 @@ jobs:
           #
           # Vorher brach der Schritt mit "a release with the same tag name already
           # exists" ab, sobald das Release schon auf anderem Weg entstanden war, und
-          # der Lauf wurde rot, obwohl nichts fehlte. Dieses Repo haengt keine Dateien
-          # an, also ist in dem Fall nichts zu tun.
+          # der Lauf wurde rot, obwohl nichts fehlte. Existiert das Release schon,
+          # wird nur das SBOM angehaengt (--clobber ersetzt ein vorhandenes).
           if gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1; then
-            echo "Dieses Release existiert bereits, nichts zu tun."
+            echo "Dieses Release existiert bereits, nur das SBOM wird angehaengt."
           else
             gh release create "${GITHUB_REF_NAME}" --repo "${GITHUB_REPOSITORY}" --title "${GITHUB_REPOSITORY#*/} ${GITHUB_REF_NAME}" --notes-file notes.md
           fi
+          gh release upload "${GITHUB_REF_NAME}" --repo "${GITHUB_REPOSITORY}" --clobber "homeportal-${GITHUB_REF_NAME}-sbom.cdx.json"

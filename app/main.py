@@ -1,16 +1,35 @@
 from fastapi import FastAPI, Form, HTTPException, Request
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 
-from app import auth, editor, live, settings, store, tiles, uploads, web
+from app import audit, auth, editor, live, settings, store, tiles, uploads, web
 from app import portal as portal_data
 
-app = FastAPI(title="Home Portal", version="1.6.0")
+app = FastAPI(title="Home Portal", version="2.0.0")
 
 
 @app.middleware("http")
-async def security_headers(request: Request, call_next):
-    response = await call_next(request)
+async def audit_and_harden(request: Request, call_next):
+    audited = audit.is_audited(request.method, request.url.path)
+    logged_in = audited and web.session_of(request) is not None
+    try:
+        response = await call_next(request)
+    except Exception as error:  # the visitor gets a reference, the log gets the details
+        reference = audit.new_reference()
+        audit.record_error(reference, request.method, request.url.path, error)
+        response = PlainTextResponse(
+            f"Something went wrong. Reference: {reference}", status_code=500
+        )
+    if audited:
+        event = audit.request_event(
+            request.method,
+            request.url.path,
+            web.client_id(request),
+            logged_in,
+            response.status_code,
+            response.headers.get("location", ""),
+        )
+        audit.record(event)
     # Home Portal itself must not be framed by other sites (clickjacking on the settings).
     response.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
     response.headers.setdefault("X-Content-Type-Options", "nosniff")
@@ -99,14 +118,14 @@ async def setup_page(request: Request, err: str = ""):
 
 
 @app.post("/setup")
-async def setup(password: str = Form(""), confirm: str = Form("")):
+async def setup(request: Request, password: str = Form(""), confirm: str = Form("")):
     if auth.is_set_up(web.data_dir()):
         raise HTTPException(status_code=403)
     problem = auth.password_problem(password, confirm)
     if problem:
         return web.redirect(f"/setup?err={problem}")
     auth.set_password(web.data_dir(), password)
-    return logged_in_redirect("/settings")
+    return logged_in_redirect(request, "/settings")
 
 
 @app.get("/login")
@@ -125,7 +144,7 @@ async def login(request: Request, password: str = Form("")):
         auth.record_failure(client)
         return web.redirect("/login?err=login_failed")
     auth.clear_failures(client)
-    return logged_in_redirect("/settings")
+    return logged_in_redirect(request, "/settings")
 
 
 @app.post("/logout")
@@ -135,7 +154,7 @@ async def logout():
     return response
 
 
-def logged_in_redirect(path: str):
+def logged_in_redirect(request: Request, path: str):
     response = web.redirect(path)
     response.set_cookie(
         auth.COOKIE_NAME,
@@ -143,6 +162,8 @@ def logged_in_redirect(path: str):
         max_age=auth.SESSION_MAX_AGE,
         httponly=True,
         samesite="strict",
+        # Behind an HTTPS proxy (X-Forwarded-Proto: https) the cookie never travels in clear.
+        secure=request.url.scheme == "https",
     )
     return response
 
