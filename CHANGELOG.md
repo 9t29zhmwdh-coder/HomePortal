@@ -3,6 +3,17 @@
 All notable changes to HomePortal will be documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.0.3] - 2026-09-27
+
+### Changed
+
+Dependency and CI updates merged since v2.0.2, each with green checks:
+
+- chore(deps): update pillow requirement from >=12.0.0 to >=12.3.0 (#55)
+- chore(deps): update tzdata requirement from >=2025.2 to >=2026.4 (#56)
+
+---
+
 ## [2.0.2] - 2026-09-27
 
 ### Security
