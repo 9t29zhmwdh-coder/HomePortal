@@ -3,6 +3,15 @@
 All notable changes to HomePortal will be documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.0.2] - 2026-09-27
+
+### Security
+
+- The test, lint, audit and SBOM tools now install from `requirements-ci.lock` with their hashes checked. Before, CI installed pytest and pytest-cov without any pin and ruff, pip-audit, uv and cyclonedx-bom by version only, which OpenSSF Scorecard marks down under pinned dependencies. The tools lock is bound to `requirements.lock` with `-c`, so CI tests exactly the versions the container ships, and CI checks that it still matches.
+- The Docker images are pinned by digest (`python:3.12-slim` in the Dockerfile, `nginx:alpine` in `docker-compose.yml`), so a retagged image cannot slip into a build. Dependabot now watches both files and bumps tag and digest together.
+
+---
+
 ## [2.0.1] - 2026-09-27
 
 ### Security

@@ -18,12 +18,10 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.12'
-      - name: Install dependencies
-        run: |
-          pip install --require-hashes -r requirements.lock
-          pip install pytest pytest-cov
-      - name: Install ruff
-        run: pip install ruff==0.16.0
+      # requirements-ci.lock holds the app's pins from requirements.lock plus the
+      # test and lint tools, every one with its hash checked.
+      - name: Install pinned dependencies and tools
+        run: python -m pip install --require-hashes -r requirements-ci.lock
       - name: Lint
         run: ruff check --select E9,F821,F822,F823 --output-format=github .
       - name: Format check
@@ -39,8 +37,8 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.12'
-      - name: Install tools
-        run: pip install pip-audit==2.10.1 uv==0.12.18
+      - name: Install pinned tools
+        run: python -m pip install --require-hashes -r requirements-ci.lock
       - name: Lock file matches requirements.txt
         run: |
           # A requirements.txt change without a new lock would ship untested versions.
@@ -50,6 +48,11 @@ jobs:
           cp requirements.lock fresh.lock
           uv pip compile requirements.txt --universal --python-version 3.12 --generate-hashes --no-header -q -o fresh.lock
           diff <(grep -v -e '^#' -e '^$' requirements.lock) <(grep -v -e '^#' -e '^$' fresh.lock)
+          # The tools lock is bound to requirements.lock by -c, so CI tests the
+          # exact versions the container ships.
+          cp requirements-ci.lock fresh-ci.lock
+          uv pip compile requirements.txt requirements-ci.in -c requirements.lock --universal --python-version 3.12 --generate-hashes -q --custom-compile-command "uv pip compile requirements.txt requirements-ci.in -c requirements.lock --universal --python-version 3.12 --generate-hashes -o requirements-ci.lock" -o fresh-ci.lock
+          diff requirements-ci.lock fresh-ci.lock
       - name: Known vulnerabilities
         run: pip-audit -r requirements.lock --progress-spinner off
 
