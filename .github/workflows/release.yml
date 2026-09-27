@@ -52,7 +52,7 @@ jobs:
       - name: Generate the SBOM
         run: |
           # CycloneDX bill of materials for exactly the pinned packages the container installs.
-          pip install cyclonedx-bom==7.4.0
+          python -m pip install --require-hashes -r requirements-ci.lock
           cyclonedx-py requirements requirements.lock --of JSON -o "homeportal-${GITHUB_REF_NAME}-sbom.cdx.json"
 
       - name: Create the release

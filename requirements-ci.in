@@ -1,0 +1,10 @@
+# Tools for CI and the release workflow. requirements-ci.lock pins them together
+# with requirements.txt, all with hashes. Regenerate it with the command in the
+# lock's header. ruff stays exact: a new ruff can flag unchanged source.
+pytest
+pytest-cov
+ruff==0.16.0
+pip-audit
+uv
+cyclonedx-bom
+pip
