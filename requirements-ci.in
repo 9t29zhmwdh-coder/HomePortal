@@ -3,7 +3,7 @@
 # lock's header. ruff stays exact: a new ruff can flag unchanged source.
 pytest
 pytest-cov
-ruff==0.16.0
+ruff==0.16.8
 pip-audit
 uv
 cyclonedx-bom
