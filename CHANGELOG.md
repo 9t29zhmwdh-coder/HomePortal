@@ -3,6 +3,17 @@
 All notable changes to HomePortal will be documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.0.4] - 2026-09-27
+
+### Changed
+
+Dependency and CI updates merged since v2.0.3, each with green checks:
+
+- chore(deps): update pyyaml requirement from >=6.0.2 to >=6.0.3 (#53)
+- chore(deps): update pillow-heif requirement from >=1.1.0 to >=1.8.0 (#54)
+
+---
+
 ## [2.0.3] - 2026-09-27
 
 ### Changed
