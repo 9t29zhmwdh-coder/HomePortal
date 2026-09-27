@@ -1,18 +1,27 @@
 # Security Policy
 
-## Supported versions
+## Supported Versions
 
 | Version | Supported |
 |---------|-----------|
-| 2.x     | ✅        |
-| < 2.0   | ❌        |
+| Latest  | ✅ Yes    |
+| Older   | ❌ No     |
 
-## Reporting a vulnerability
+Security fixes are only applied to the latest release.
 
-Please do **not** open a public issue for security vulnerabilities.
-Report privately via the GitHub repository's Security tab or contact the maintainer directly.
+## Reporting a Vulnerability
 
-I aim to respond within 72 hours and provide a fix within 14 days for confirmed vulnerabilities.
+**Do NOT open a public GitHub issue for security vulnerabilities.**
+
+Instead, report it privately via [GitHub Security Advisory](https://github.com/9t29zhmwdh-coder/HomePortal/security/advisories/new) or contact the maintainer via the GitHub profile.
+
+Include:
+- Description of the vulnerability
+- Steps to reproduce
+- Potential impact
+- Suggested fix (if any)
+
+A response within **48 hours** is the target, and the issue will be worked on promptly.
 
 ## How Home Portal is protected
 
