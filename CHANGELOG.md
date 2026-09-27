@@ -17,6 +17,10 @@ Dependency updates merged since v2.0.0:
 - chore(deps): update uvicorn requirement from >=0.52.0 to >=0.53.0 (#45)
 - chore(ci): bump the actions group with 3 updates (#42)
 
+### Fixed
+
+- The lock check in CI resolved every dependency afresh to its newest release and compared that with `requirements.lock`, so any upstream release turned it red even when nothing in this repository had changed. It now starts from the committed lock and fails only when `requirements.txt` demands a version the lock does not have.
+
 ---
 
 ## [2.0.0] - 2026-09-24

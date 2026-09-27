@@ -44,6 +44,10 @@ jobs:
       - name: Lock file matches requirements.txt
         run: |
           # A requirements.txt change without a new lock would ship untested versions.
+          # Seeding with the committed lock keeps its pins wherever they still
+          # satisfy requirements.txt; without it every upstream release (uvicorn
+          # 0.54 on 2026-09-27) turned the check red although nothing changed here.
+          cp requirements.lock fresh.lock
           uv pip compile requirements.txt --universal --python-version 3.12 --generate-hashes --no-header -q -o fresh.lock
           diff <(grep -v -e '^#' -e '^$' requirements.lock) <(grep -v -e '^#' -e '^$' fresh.lock)
       - name: Known vulnerabilities
