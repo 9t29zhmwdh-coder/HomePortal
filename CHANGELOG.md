@@ -3,6 +3,22 @@
 All notable changes to HomePortal will be documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.0.1] - 2026-09-27
+
+### Security
+
+- `SECURITY.md` links GitHub's private advisory form in full. The link was missing or relative, so OpenSSF Scorecard found no reporting channel and scored the policy 4 of 10.
+- The supported-versions table named a version line that is no longer current; it now says that the latest release gets security fixes.
+
+### Changed
+
+Dependency updates merged since v2.0.0:
+
+- chore(deps): update uvicorn requirement from >=0.52.0 to >=0.53.0 (#45)
+- chore(ci): bump the actions group with 3 updates (#42)
+
+---
+
 ## [2.0.0] - 2026-09-24
 
 Home Portal is now a home dashboard: tabs of tiles you arrange yourself, live values from Home Assistant and your services, embedded apps, and themes, all set up in the browser. Versions 1.2 to 1.6 built it up step by step; 2.0.0 completes it and brings the release up to the portfolio's security standard.
