@@ -5,7 +5,7 @@ from fastapi.staticfiles import StaticFiles
 from app import audit, auth, editor, live, settings, store, tiles, uploads, web
 from app import portal as portal_data
 
-app = FastAPI(title="Home Portal", version="2.0.3")
+app = FastAPI(title="Home Portal", version="2.0.4")
 
 
 @app.middleware("http")
