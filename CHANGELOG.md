@@ -3,6 +3,22 @@
 All notable changes to HomePortal will be documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.0.5] - 2026-10-11
+
+### Security
+
+Fixes for the 11 low-severity findings (6 themes) of the Claude Security scan of 2026-10-11:
+
+- **First setup (CWE-306):** `/setup` needs a one-time token that is printed to the container log, so the first visitor on the network can no longer claim the admin account.
+- **Sessions (CWE-613):** logout now ends every session, a copied cookie stops working. Only a valid session can trigger it.
+- **Password change (CWE-620):** changing the password asks for the current password; wrong attempts count towards the login lockout.
+- **Plain HTTP (CWE-319, CWE-614):** `HOME_PORTAL_SECURE_COOKIES=1` forces the Secure flag for proxies that do not send `X-Forwarded-Proto`; HSTS is sent whenever the cookie is Secure. `BIND_ADDRESS` limits the published port to one interface. The README states the plain HTTP default more clearly. Built-in TLS is not part of this release.
+- **Lockout behind a proxy (CWE-645):** nginx can take the real client address from a trusted proxy (`nginx/realip.d/trusted-proxy.conf`). Off by default, nothing is trusted unless configured.
+- **Cache growth (CWE-770):** the live cache holds at most 500 entries and drops expired ones first.
+- **Reflected text (CWE-74):** `err` and `msg` in the query string are only shown when they name a known message.
+
+---
+
 ## [2.0.4] - 2026-09-27
 
 ### Changed
