@@ -10,6 +10,7 @@ services:
       - "8000"
     environment:
       - TZ=${TZ}
+      - HOME_PORTAL_SECURE_COOKIES=${HOME_PORTAL_SECURE_COOKIES:-0}
     networks:
       - portal-net
 
@@ -18,9 +19,11 @@ services:
     container_name: home-portal-nginx
     restart: unless-stopped
     ports:
-      - "80:80"
+      # BIND_ADDRESS limits the portal to one network interface, for example 192.168.1.10.
+      - "${BIND_ADDRESS:-0.0.0.0}:80:80"
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/realip.d:/etc/nginx/realip.d:ro
     depends_on:
       - app
     networks:

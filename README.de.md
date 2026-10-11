@@ -72,6 +72,11 @@ nano .env
 docker compose up -d --build
 ```
 
+Beim ersten Start gibt das Portal ein einmaliges Einrichtungs-Token aus. Lies es
+mit `docker compose logs app` ab und gib es zusammen mit deinem Admin-Passwort unter
+`http://DEIN-HOST/setup` ein; so kann niemand im Netz das Admin-Konto vor dir
+übernehmen.
+
 Das Portal ist danach unter `http://DEIN-HOST` erreichbar.
 
 ## Verzeichnisstruktur
@@ -219,11 +224,18 @@ nie an den Browser geschickt, und eine Audit-Zeile für jede Änderung in
 > Passwort und Sitzungs-Cookie gehen dabei aber unverschlüsselt durchs Netz.
 > Für alles darüber hinaus gehört ein TLS-Proxy davor (zum Beispiel der
 > Reverse-Proxy deines NAS), der `X-Forwarded-Proto` weiterreicht; das
-> Sitzungs-Cookie bekommt dann das `Secure`-Flag von selbst.
+> Sitzungs-Cookie bekommt dann das `Secure`-Flag von selbst. Sendet dein Proxy
+> den Header nicht, setze `HOME_PORTAL_SECURE_COOKIES=1` in der `.env`.
+> `BIND_ADDRESS` in der `.env` beschränkt das Portal auf eine Netzwerkschnittstelle.
+>
+> Hinter einem solchen Proxy teilen alle Besucher die Adresse des Proxys, und damit
+> auch die Login-Sperre. Kopiere `nginx/realip.d/trusted-proxy.conf.example` nach
+> `nginx/realip.d/trusted-proxy.conf`, trage die Adresse des Proxys ein und starte
+> nginx neu.
 
-> **Hinweis:** Abmelden entfernt das Cookie aus deinem Browser, macht eine
-> Kopie davon aber nicht ungültig. Ein Passwortwechsel beendet alle Sitzungen
-> auf einmal.
+> **Hinweis:** Abmelden beendet alle Sitzungen auf einmal, eine kopierte Cookie-Kopie
+> funktioniert danach nicht mehr. Ein Passwortwechsel verlangt das aktuelle Passwort
+> und beendet ebenfalls alle Sitzungen.
 
 Jedes Release auf GitHub enthält ein CycloneDX-SBOM der Pakete, die der
 Container genau installiert (`requirements.lock`, mit Hashes festgelegt).
