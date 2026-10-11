@@ -72,6 +72,11 @@ nano .env
 docker compose up -d --build
 ```
 
+On the first start the portal prints a one-time setup token. Read it with
+`docker compose logs app` and enter it together with your admin password at
+`http://YOUR-HOST/setup`; this keeps a stranger on the network from claiming the
+admin account first.
+
 The portal will be available at `http://YOUR-HOST`.
 
 ## Directory Structure
@@ -211,10 +216,16 @@ and an audit line for every change in `docker compose logs app`.
 > setup, but the password and session cookie cross the network unencrypted.
 > For anything beyond that, put a TLS proxy in front (for example the reverse
 > proxy of your NAS) and let it forward `X-Forwarded-Proto`; the session cookie
-> then gets the `Secure` flag on its own.
+> then gets the `Secure` flag on its own. If your proxy does not send that header,
+> set `HOME_PORTAL_SECURE_COOKIES=1` in `.env`. `BIND_ADDRESS` in `.env` limits the
+> portal to one network interface.
+>
+> Behind such a proxy all visitors share the proxy's address, and so does the login
+> lockout. Copy `nginx/realip.d/trusted-proxy.conf.example` to
+> `nginx/realip.d/trusted-proxy.conf`, enter the proxy's address and restart nginx.
 
-> **Note:** Logging out removes the cookie from your browser but does not
-> revoke a copy of it. Changing the password ends every session at once.
+> **Note:** Logging out ends every session at once, so a copied cookie stops working
+> too. Changing the password asks for the current password and does the same.
 
 Each release on GitHub carries a CycloneDX SBOM of the exact packages the
 container installs (`requirements.lock`, pinned with hashes).

@@ -20,6 +20,8 @@ MAX_ENTITIES = 8
 WEATHER_URL = "https://api.open-meteo.com/v1/forecast"
 GEOCODE_URL = "https://geocoding-api.open-meteo.com/v1/search"
 
+# Keys can contain request-derived values (the page origin), so the cache must not grow without bound.
+MAX_CACHE_ENTRIES = 500
 _cache: dict[tuple, tuple[float, dict]] = {}
 FETCHED_TYPES = ("ha", "status", "weather", "app")
 
@@ -38,8 +40,18 @@ async def cached(key: tuple, seconds: int, fetch) -> dict:
     if hit and hit[0] > time.monotonic():
         return hit[1]
     value = await fetch()
-    _cache[key] = (time.monotonic() + seconds, value)
+    _remember(key, seconds, value)
     return value
+
+
+def _remember(key: tuple, seconds: int, value: dict) -> None:
+    now = time.monotonic()
+    if len(_cache) >= MAX_CACHE_ENTRIES:
+        for stale in [k for k, (until, _) in _cache.items() if until <= now]:
+            del _cache[stale]
+    while len(_cache) >= MAX_CACHE_ENTRIES:
+        del _cache[next(iter(_cache))]  # oldest insertion first
+    _cache[key] = (now + seconds, value)
 
 
 async def board_data(board: dict, data_dir: Path, origin: str = "") -> dict:

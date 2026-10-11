@@ -56,7 +56,31 @@ def set_password(data_dir: Path, password: str) -> None:
         auth["password_hash"] = _hasher.hash(password)
         # A new password also invalidates every existing session.
         auth["session_key"] = secrets.token_urlsafe(32)
+        # The setup token has done its job.
+        auth.pop("setup_token", None)
         write_auth(data_dir, auth)
+
+
+def ensure_setup_token(data_dir: Path) -> str | None:
+    """The one-time token that guards the first setup, created on first need.
+
+    It is written to the container log, so only someone who can read the log (the
+    owner) can claim the admin account. None once a password exists.
+    """
+    with _lock:
+        auth = load_auth(data_dir)
+        if auth.get("password_hash"):
+            return None
+        if not auth.get("setup_token"):
+            auth["setup_token"] = secrets.token_urlsafe(16)
+            write_auth(data_dir, auth)
+            print(f"Home Portal setup token: {auth['setup_token']}", flush=True)
+        return auth["setup_token"]
+
+
+def check_setup_token(data_dir: Path, token: str) -> bool:
+    expected = ensure_setup_token(data_dir)
+    return expected is not None and secrets.compare_digest(expected, token.strip())
 
 
 def check_password(data_dir: Path, password: str) -> bool:
@@ -80,16 +104,31 @@ def serializer(data_dir: Path) -> URLSafeTimedSerializer:
 
 
 def issue_session(data_dir: Path) -> str:
-    return serializer(data_dir).dumps({"csrf": secrets.token_urlsafe(24)})
+    payload = {
+        "csrf": secrets.token_urlsafe(24),
+        "gen": load_auth(data_dir).get("session_gen", 0),
+    }
+    return serializer(data_dir).dumps(payload)
+
+
+def revoke_sessions(data_dir: Path) -> None:
+    """Logout: every cookie issued so far stops working, a stolen copy included."""
+    with _lock:
+        auth = load_auth(data_dir)
+        auth["session_gen"] = auth.get("session_gen", 0) + 1
+        write_auth(data_dir, auth)
 
 
 def read_session(data_dir: Path, cookie: str | None) -> dict | None:
     if not cookie or not is_set_up(data_dir):
         return None
     try:
-        return serializer(data_dir).loads(cookie, max_age=SESSION_MAX_AGE)
+        session = serializer(data_dir).loads(cookie, max_age=SESSION_MAX_AGE)
     except BadSignature:
         return None
+    if session.get("gen", 0) != load_auth(data_dir).get("session_gen", 0):
+        return None
+    return session
 
 
 def is_locked_out(client: str) -> bool:

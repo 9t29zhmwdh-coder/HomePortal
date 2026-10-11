@@ -182,6 +182,13 @@ async def save_access(request: Request):
 async def change_password(request: Request):
     form = await request.form()
     password, confirm = str(form.get("password", "")), str(form.get("confirm", ""))
+    client = web.client_id(request)
+    if auth.is_locked_out(client):
+        return web.redirect("/settings?err=login_locked#access")
+    if not auth.check_password(web.data_dir(), str(form.get("current", ""))):
+        auth.record_failure(client)
+        return web.redirect("/settings?err=password_wrong#access")
+    auth.clear_failures(client)
     problem = auth.password_problem(password, confirm)
     if problem:
         return web.redirect(f"/settings?err={problem}#access")

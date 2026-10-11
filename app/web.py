@@ -1,5 +1,6 @@
 """Request helpers shared by the page and the settings routes."""
 
+import os
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -66,6 +67,10 @@ def base_context(request: Request, state: dict) -> dict:
 
 def render(request: Request, template: str, state: dict, **extra):
     context = base_context(request, state) | extra
+    # err and msg come from the query string: only known message keys may be shown.
+    for key in ("err", "msg"):
+        if context.get(key) not in i18n.STRINGS["en"]:
+            context[key] = ""
     return templates.TemplateResponse(request, template, context)
 
 
@@ -101,6 +106,20 @@ def require_admin_json(request: Request) -> dict:
 
 def redirect(path: str) -> RedirectResponse:
     return RedirectResponse(path, status_code=303)
+
+
+def cookie_secure(request: Request) -> bool:
+    """Secure cookie and HSTS: forced by HOME_PORTAL_SECURE_COOKIES=1, else from the scheme.
+
+    The scheme comes from the TLS proxy in front (X-Forwarded-Proto); the switch is for
+    proxies that do not send it.
+    """
+    forced = os.environ.get("HOME_PORTAL_SECURE_COOKIES", "").lower() in (
+        "1",
+        "true",
+        "yes",
+    )
+    return forced or request.url.scheme == "https"
 
 
 def client_id(request: Request) -> str:
