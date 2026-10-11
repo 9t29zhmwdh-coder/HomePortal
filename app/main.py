@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, Form, HTTPException, Request
 from fastapi.responses import FileResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
@@ -5,7 +7,15 @@ from fastapi.staticfiles import StaticFiles
 from app import audit, auth, editor, live, settings, store, tiles, uploads, web
 from app import portal as portal_data
 
-app = FastAPI(title="Home Portal", version="2.0.4")
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    # Print the setup token at start so the owner finds it in `docker compose logs app`.
+    auth.ensure_setup_token(web.data_dir())
+    yield
+
+
+app = FastAPI(title="Home Portal", version="2.0.5", lifespan=lifespan)
 
 
 @app.middleware("http")
@@ -34,6 +44,8 @@ async def audit_and_harden(request: Request, call_next):
     response.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
     response.headers.setdefault("X-Content-Type-Options", "nosniff")
     response.headers.setdefault("Referrer-Policy", "same-origin")
+    if web.cookie_secure(request):
+        response.headers.setdefault("Strict-Transport-Security", "max-age=15552000")
     return response
 
 
@@ -114,13 +126,26 @@ def file_or_404(path):
 async def setup_page(request: Request, err: str = ""):
     if auth.is_set_up(web.data_dir()):
         return web.redirect("/login")
+    auth.ensure_setup_token(web.data_dir())
     return web.render(request, "setup.html", web.load_state(), err=err)
 
 
 @app.post("/setup")
-async def setup(request: Request, password: str = Form(""), confirm: str = Form("")):
+async def setup(
+    request: Request,
+    password: str = Form(""),
+    confirm: str = Form(""),
+    token: str = Form(""),
+):
     if auth.is_set_up(web.data_dir()):
         raise HTTPException(status_code=403)
+    client = web.client_id(request)
+    if auth.is_locked_out(client):
+        return web.redirect("/setup?err=login_locked")
+    if not auth.check_setup_token(web.data_dir(), token):
+        auth.record_failure(client)
+        return web.redirect("/setup?err=setup_token_wrong")
+    auth.clear_failures(client)
     problem = auth.password_problem(password, confirm)
     if problem:
         return web.redirect(f"/setup?err={problem}")
@@ -148,7 +173,10 @@ async def login(request: Request, password: str = Form("")):
 
 
 @app.post("/logout")
-async def logout():
+async def logout(request: Request):
+    # Only a valid session may revoke, so a stranger cannot sign the admin out.
+    if web.session_of(request) is not None:
+        auth.revoke_sessions(web.data_dir())
     response = web.redirect("/")
     response.delete_cookie(auth.COOKIE_NAME)
     return response
@@ -163,7 +191,7 @@ def logged_in_redirect(request: Request, path: str):
         httponly=True,
         samesite="strict",
         # Behind an HTTPS proxy (X-Forwarded-Proto: https) the cookie never travels in clear.
-        secure=request.url.scheme == "https",
+        secure=web.cookie_secure(request),
     )
     return response
 

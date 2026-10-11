@@ -4,6 +4,7 @@ import json
 from fastapi.testclient import TestClient
 from PIL import Image
 
+from app import auth
 from app.main import app
 from tests.conftest import PASSWORD
 
@@ -180,7 +181,8 @@ def test_changing_the_password_ends_every_session(admin):
     other.post("/login", data={"password": PASSWORD})
     new = "ganz-neues-passwort"
     admin.post(
-        "/settings/password", data={"csrf": admin.csrf, "password": new, "confirm": new}
+        "/settings/password",
+        data={"csrf": admin.csrf, "current": PASSWORD, "password": new, "confirm": new},
     )
     assert admin.get("/settings").headers["location"] == "/login"
     assert other.get("/settings").headers["location"] == "/login"
@@ -198,3 +200,14 @@ def test_iphone_heic_upload_is_accepted(admin, data_dir):
     assert background["kind"] == "upload"
     stored = Image.open(data_dir / "uploads" / f"{background['value']}.jpg")
     assert stored.format == "JPEG" and stored.size == (640, 480)
+
+
+def test_changing_the_password_needs_the_current_one(admin):
+    new = "ganz-neues-passwort"
+    response = admin.post(
+        "/settings/password",
+        data={"csrf": admin.csrf, "current": "falsch", "password": new, "confirm": new},
+    )
+    assert "password_wrong" in response.headers["location"]
+    assert admin.get("/settings").status_code == 200
+    assert auth.check_password(admin.data_dir, PASSWORD)

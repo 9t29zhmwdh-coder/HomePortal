@@ -4,7 +4,7 @@ import logging
 import pytest
 
 from app import audit, store
-from tests.conftest import PASSWORD
+from tests.conftest import PASSWORD, setup_form
 
 
 @pytest.fixture
@@ -25,8 +25,8 @@ def events(lines):
     return [json.loads(line) for line in lines]
 
 
-def test_changes_are_audited_without_their_content(client, audit_lines):
-    client.post("/setup", data={"password": PASSWORD, "confirm": PASSWORD})
+def test_changes_are_audited_without_their_content(client, data_dir, audit_lines):
+    client.post("/setup", data=setup_form(data_dir))
     client.post("/login", data={"password": "wrong-password-123"})
     logged = events(audit_lines)
     assert [e["action"] for e in logged] == ["POST /setup", "POST /login"]

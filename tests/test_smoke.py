@@ -2,7 +2,8 @@ import json
 
 import pytest
 
-from tests.conftest import PASSWORD
+from app import auth
+from tests.conftest import PASSWORD, setup_form
 
 
 def test_fresh_install_shows_hint_and_no_fake_links(client):
@@ -69,13 +70,26 @@ def test_settings_before_setup_leads_to_setup(client):
 
 
 def test_setup_rejects_short_or_mismatched_passwords(client, data_dir):
-    short = client.post("/setup", data={"password": "kurz", "confirm": "kurz"})
+    short = client.post("/setup", data=setup_form(data_dir, "kurz"))
     assert "password_too_short" in short.headers["location"]
     mismatch = client.post(
-        "/setup", data={"password": PASSWORD, "confirm": PASSWORD + "x"}
+        "/setup", data=setup_form(data_dir, PASSWORD, PASSWORD + "x")
     )
     assert "password_mismatch" in mismatch.headers["location"]
-    assert not (data_dir / "auth.json").exists()
+    assert not auth.is_set_up(data_dir)
+
+
+def test_setup_needs_the_token_from_the_log(client, data_dir, capsys):
+    client.get("/setup")
+    assert "setup token:" in capsys.readouterr().out
+    form = setup_form(data_dir) | {"token": "geraten"}
+    response = client.post("/setup", data=form)
+    assert "setup_token_wrong" in response.headers["location"]
+    assert not auth.is_set_up(data_dir)
+
+
+def test_setup_token_is_gone_after_setup(admin):
+    assert "setup_token" not in (admin.data_dir / "auth.json").read_text()
 
 
 def test_setup_stores_only_a_hash_readable_by_the_owner(admin, data_dir):
@@ -88,8 +102,7 @@ def test_setup_stores_only_a_hash_readable_by_the_owner(admin, data_dir):
 def test_setup_cannot_run_twice(admin):
     other = "ein-anderes-passwort"
     assert (
-        admin.post("/setup", data={"password": other, "confirm": other}).status_code
-        == 403
+        admin.post("/setup", data=setup_form(admin.data_dir, other)).status_code == 403
     )
     assert admin.get("/setup").headers["location"] == "/login"
 
@@ -99,17 +112,56 @@ def test_logout_ends_the_session(admin):
     assert admin.get("/settings").headers["location"] == "/login"
 
 
+def test_logout_revokes_a_copied_cookie(admin):
+    from fastapi.testclient import TestClient
+
+    from app.main import app
+
+    copy = TestClient(app, follow_redirects=False)
+    copy.cookies.set(auth.COOKIE_NAME, admin.cookies.get(auth.COOKIE_NAME))
+    assert copy.get("/settings").status_code == 200
+    admin.post("/logout")
+    assert copy.get("/settings").headers["location"] == "/login"
+
+
+def test_logout_without_a_session_revokes_nothing(admin):
+    from fastapi.testclient import TestClient
+
+    from app.main import app
+
+    TestClient(app, follow_redirects=False).post("/logout")
+    assert admin.get("/settings").status_code == 200
+
+
+def test_unknown_messages_in_the_query_are_not_shown(admin):
+    page = admin.get("/login?err=Bitte%20Passwort%20senden").text
+    assert "Passwort senden" not in page
+    assert (
+        "Passwort senden"
+        not in admin.get("/settings?err=Bitte%20Passwort%20senden").text
+    )
+
+
 def test_session_cookie_is_secure_behind_https(data_dir):
     from fastapi.testclient import TestClient
 
     from app.main import app
 
     secure = TestClient(app, base_url="https://portal.test", follow_redirects=False)
-    response = secure.post("/setup", data={"password": PASSWORD, "confirm": PASSWORD})
+    response = secure.post("/setup", data=setup_form(data_dir))
     cookie = response.headers["set-cookie"].lower()
     assert "secure" in cookie and "httponly" in cookie and "samesite=strict" in cookie
 
 
-def test_session_cookie_is_not_secure_over_plain_http(client):
-    response = client.post("/setup", data={"password": PASSWORD, "confirm": PASSWORD})
+def test_session_cookie_is_not_secure_over_plain_http(client, data_dir):
+    response = client.post("/setup", data=setup_form(data_dir))
     assert "secure" not in response.headers["set-cookie"].lower()
+
+
+def test_secure_cookie_can_be_forced_without_a_proxy_header(
+    client, data_dir, monkeypatch
+):
+    monkeypatch.setenv("HOME_PORTAL_SECURE_COOKIES", "1")
+    response = client.post("/setup", data=setup_form(data_dir))
+    assert "secure" in response.headers["set-cookie"].lower()
+    assert "strict-transport-security" in response.headers
