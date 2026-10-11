@@ -94,7 +94,14 @@ jobs:
           set -e
           jar=$(mktemp)
           pw=ci-smoke-password-123
-          curl -sf -c "$jar" -o /dev/null -d "password=$pw&confirm=$pw" http://localhost/setup
+          # The one-time setup token is printed to the container log, as an owner would read it.
+          curl -sf http://localhost/setup -o /dev/null
+          token=$(docker compose logs app | grep -o 'setup token: [A-Za-z0-9_-]*' | head -1 | cut -d' ' -f3)
+          test -n "$token"
+          # Without the token nobody may claim the account.
+          test "$(curl -s -o /dev/null -w '%{redirect_url}' -d "password=$pw&confirm=$pw&token=wrong" http://localhost/setup)" != ""
+          curl -s http://localhost/settings -o /dev/null -w '%{redirect_url}' | grep -q /setup
+          curl -sf -c "$jar" -o /dev/null -d "password=$pw&confirm=$pw&token=$token" http://localhost/setup
           csrf=$(curl -sf -b "$jar" http://localhost/settings | grep -o 'name="csrf" value="[^"]*"' | head -1 | cut -d'"' -f4)
           test -n "$csrf"
           # 3 MB of noise: Nginx must pass it on (no 413), the app must refuse it as not an image.
