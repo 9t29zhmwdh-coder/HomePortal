@@ -3,6 +3,18 @@
 All notable changes to HomePortal will be documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.0.7] - 2026-10-12
+
+### Changed
+
+Dependency and CI updates merged since v2.0.6, each with green checks:
+
+- chore(ci): bump the actions group with 4 updates (#65)
+- chore(deps): update fastapi requirement from >=0.141.1 to >=0.143.0 (#64)
+- chore(deps): bump ruff from 0.16.8 to 0.16.10 with regenerated tools lock
+
+---
+
 ## [2.0.6] - 2026-10-11
 
 ### Fixed
